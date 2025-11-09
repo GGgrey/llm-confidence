@@ -1,0 +1,988 @@
+text,answer,ground_truth,confidence,is_valid,is_correct
+"To find the vertical asymptotes of a rational function in the form y = p(x)/q(x), we need to look for values of x that make the denominator q(x) equal to zero. 
+
+For the given function y = 2 / (x^2 + x - 6), the denominator is x^2 + x - 6.
+
+First, let's find the values of x that make the denominator equal to zero:
+
+x^2 + x - 6 = 0
+
+To solve this quadratic equation, we can use the quadratic formula: x = (-b ± √(b^2 - 4ac)) / 2a, where a, b, and c are the coefficients of the quadratic equation.
+
+In this case, a = 1, b = 1, and c = -6. 
+
+x = (-(1) ± √((1)^2 - 4(1)(-6))) / (2(1))
+x = (-1 ± √(1 + 24)) / 2
+x = (-1 ± √25) / 2
+x = (-1 ± 5) / 2
+
+So, we have two possible values for x:
+x = (-1 + 5) / 2 = 4 / 2 = 2
+x = (-1 - 5) / 2 = -6 / 2 = -3
+
+Now, let's check if these values are vertical asymptotes by plugging them into the original function:
+
+For x = 2:
+y = 2 / ((2)^2 + 2 - 6) = 2 / (4 + 2 - 6) = 2 / 0 (this is undefined, so x = 2 is a vertical asymptote)
+
+For x = -3:
+y = 2 / ((-3)^2 + (-3) - 6) = 2 / (9 - 3 - 6) = 2 / 0 (this is undefined, so x = -3 is a vertical asymptote)
+
+Therefore, the graph of y = 2 / (x^2 + x - 6) has 2 vertical asymptotes.
+
+\boxed{2}",2,2,-0.00029001666791422033,True,True
+"To find 120% of 30, we need to multiply 30 by 1.2 (since 120% is the same as 1.2).
+
+120% of 30 = 30 * 1.2 = 36
+
+To find 130% of 20, we need to multiply 20 by 1.3 (since 130% is the same as 1.3).
+
+130% of 20 = 20 * 1.3 = 26
+
+The positive difference between 36 and 26 is 10.
+
+So, the final answer is $\boxed{10}$.",10,10,-0.0004550897960739194,True,True
+"To find the 100th term of the arithmetic sequence, we need to identify the common difference and the first term.
+
+The common difference is the difference between each consecutive term. In this case, the common difference is 4 (10 - 6 = 4, 14 - 10 = 4, 18 - 14 = 4).
+
+The formula to find the nth term of an arithmetic sequence is: 
+an = a1 + (n - 1)d
+
+where a1 is the first term, n is the term number, and d is the common difference.
+
+In this case, a1 = 6 and d = 4. 
+
+We need to find the 100th term, so n = 100. 
+
+Now, let's plug in the values into the formula:
+a100 = 6 + (100 - 1) * 4
+a100 = 6 + (99) * 4
+a100 = 6 + 396
+a100 = 402
+
+Therefore, the 100th term of the arithmetic sequence is 402.
+
+\boxed{402}",402,402,-0.0007595370674293404,True,True
+"To determine the vertical asymptotes of the graph of $y=\frac{2}{x^2+x-6}$, we need to find the values of $x$ where the denominator of the fraction becomes zero, as division by zero is undefined.
+
+The denominator of the fraction can be factored as:
+$x^2+x-6 = (x+3)(x-2)$
+
+Now, we set the denominator equal to zero to find the values of $x$ where the function is undefined:
+$(x+3)(x-2) = 0$
+
+This can be solved by setting each factor equal to zero and solving for $x$:
+$x+3 = 0 \implies x = -3$
+$x-2 = 0 \implies x = 2$
+
+Therefore, the function $y=\frac{2}{x^2+x-6}$ has vertical asymptotes at $x=-3$ and $x=2$.
+
+Since we have found two values of $x$, the final answer is:
+
+\boxed{2}",2,2,-0.00012078717137253053,True,True
+"To find the positive difference between $120\%$ of 30 and $130\%$ of 20, we first need to calculate each percentage.
+
+$120\%$ of 30 is $1.2 \times 30 = 36$.
+
+$130\%$ of 20 is $1.3 \times 20 = 26$.
+
+The positive difference between these two values is $36 - 26 = 10$.
+
+Therefore, the positive difference is $\boxed{10}$.",10,10,-0.0005679224145193126,True,True
+"To find the value of x, we first need to rewrite the equation in a more familiar form. Since $4^x$ can be written as $(2^2)^x$, we can rewrite the equation as follows:
+
+$2^8 = (2^2)^x$
+
+Using the property of exponents that $(a^m)^n = a^{m*n}$, we can simplify the equation to:
+
+$2^8 = 2^{2x}$
+
+Since the bases are equal, the exponents must also be equal. Therefore, we can set up the equation:
+
+8 = 2x
+
+To solve for x, we can divide both sides by 2:
+
+x = 8/2
+x = 4
+
+The final answer is $\boxed{4}$.",4,4,-0.0019203668304492555,True,True
+"To find the 100th term of the arithmetic sequence, we need to find the common difference (d) and the first term (a1).
+
+Step 1: Find the common difference (d)
+The given sequence is an arithmetic sequence, and we can find the common difference by subtracting any term from the previous term. 
+
+d = 10 - 6 = 4
+
+However, since 4 is the result of subtracting the first term from the second term, the common difference is likely the same between any two consecutive terms. 
+
+Step 2: Verify the common difference
+We can verify the common difference by checking it between any two other terms:
+
+10 - 8 is not present but we can try 14 - 10 = 4
+
+Therefore, our common difference is indeed 4.
+
+Step 3: Find the formula for the nth term
+The formula for the nth term of an arithmetic sequence is given by: an = a1 + (n-1)d
+
+Step 4: Find the 100th term
+We know a1 = 6, n = 100, and d = 4.
+
+an = 6 + (100 - 1) * 4
+= 6 + 99 * 4
+= 6 + 396
+= 402
+
+Therefore, the 100th term of the arithmetic sequence is 402.
+
+\boxed{402}",402,402,-0.0010442724635294357,True,True
+"To find the vertical asymptotes of a rational function, we need to find the values of x that make the denominator zero and check if those values are also zeros of the numerator. 
+
+Given the function $y=\frac{2}{x^2+x-6}$, we can start by finding the values of x that make the denominator zero.
+
+x^2 + x - 6 = 0
+
+To solve this quadratic equation, we can use the quadratic formula:
+
+x = (-b ± √(b^2-4ac)) / 2a
+
+In this case, a = 1, b = 1, and c = -6. Plugging these values into the formula, we get:
+
+x = (-(1) ± √((1)^2-4(1)(-6))) / 2(1)
+x = (-1 ± √(1+24)) / 2
+x = (-1 ± √25) / 2
+x = (-1 ± 5) / 2
+
+This gives us two possible values for x:
+
+x = (-1 + 5) / 2 = 4/2 = 2
+x = (-1 - 5) / 2 = -6/2 = -3
+
+Now, we need to check if these values are also zeros of the numerator. Since the numerator is a constant (2), neither 2 nor -3 are zeros of the numerator.
+
+Therefore, the function has vertical asymptotes at x = 2 and x = -3.
+
+The final answer is: $\boxed{2}$",2,2,-0.00048573450229829707,True,True
+"To find $120\%$ of 30, we multiply 30 by 1.2. 
+
+First, we calculate 30 * 1.2, which is 36. 
+
+To find $130\%$ of 20, we multiply 20 by 1.3. 
+
+Next, we calculate 20 * 1.3, which is 26.
+
+Now, we need to find the difference between 36 and 26.
+
+36 - 26 is 10.
+
+Therefore, the positive difference between $120\%$ of 30 and $130\%$ of 20 is 10.
+
+\boxed{10}",10,10,-0.0017621664578025482,True,True
+"To find the value of $x$, we need to isolate $x$ in the equation $2^8=4^x$. 
+
+First, we rewrite 4 as $2^2$ since $4 = 2^2$. So the equation becomes $2^8 = (2^2)^x$.
+
+Next, we apply the power of a power rule to the right side of the equation, which states that $(a^m)^n = a^{mn}$. Applying this rule to $(2^2)^x$, we get $2^8 = 2^{2x}$.
+
+Since the bases are equal (both are 2), the exponents must be equal as well. Therefore, we can set $8 = 2x$.
+
+Now, we can solve for $x$ by dividing both sides of the equation by 2, which results in $x = 8/2 = 4$.
+
+So, the value of $x$ is $\boxed{4}$.",4,4,-0.0008919114650953376,True,True
+"To find the 100th term of an arithmetic sequence, we need to know the first term (a) and the common difference (d).
+
+In the given sequence: 
+- The first term (a) is 6.
+- The common difference (d) is 4, which can be found by subtracting a term by its previous term (10 - 6 = 4).
+
+The formula for the nth term of an arithmetic sequence is: 
+a_n = a + (n-1)d, where a is the first term, n is the term number, and d is the common difference.
+
+Substituting the given values into the formula: 
+a_100 = 6 + (100-1) * 4
+= 6 + 99 * 4
+= 6 + 396
+= 402
+
+Therefore, the 100th term of the arithmetic sequence is \boxed{402}.",402,402,-0.000312742375673187,True,True
+"To find the vertical asymptotes of the graph of $y=\frac{2}{x^2+x-6}$, we need to find the values of x that make the denominator equal to zero.
+
+Step 1: Factor the denominator
+The denominator can be factored as $x^2+x-6 = (x+3)(x-2)$.
+
+Step 2: Set the denominator equal to zero
+Set $(x+3)(x-2) = 0$.
+
+Step 3: Solve for x
+To solve for x, we need to find the values of x that make each factor equal to zero. 
+$(x+3) = 0$ or $(x-2) = 0$
+$x+3 = 0$ or $x-2 = 0$
+$x = -3$ or $x = 2$
+
+However, the question asks for vertical asymptotes. Vertical asymptotes occur where the function is undefined, which is where the denominator is equal to zero.
+
+Since the degree of the denominator is higher than the degree of the numerator, there are no factors that cancel out, and the vertical asymptotes will be at the values of x that make the denominator equal to zero.
+
+The final answer is: $\boxed{2}$",2,2,0.0015595174197780975,True,True
+"To solve for $x$, we need to isolate $x$ in the equation.
+
+Given equation: $2^8=4^x$
+
+Since $4=2^2$, we can rewrite the equation as:
+$2^8=(2^2)^x$
+
+Using the power of a power rule, which states that $(a^m)^n=a^{mn}$, we can simplify the equation:
+$2^8=2^{2x}$
+
+Since the bases are the same (both are 2), we can equate the exponents:
+$8=2x$
+
+To solve for $x$, divide both sides by 2:
+$x=4$
+
+So, the value of $x$ is $\boxed{4}$.",4,4,-0.0015349438844583095,True,True
+"To find the 100th term of the arithmetic sequence, we first need to determine the common difference (d) and the first term (a1).
+
+Given sequence: 6, 10, 14, 18,...
+
+The common difference (d) is the difference between consecutive terms:
+d = 10 - 6 = 4
+
+The first term (a1) is the first number in the sequence:
+a1 = 6
+
+Now we can use the formula for the nth term of an arithmetic sequence:
+an = a1 + (n - 1)d
+
+We want to find the 100th term, so n = 100:
+a100 = 6 + (100 - 1) * 4
+a100 = 6 + 99 * 4
+a100 = 6 + 396
+a100 = 402
+
+So, the 100th term of the arithmetic sequence is 402. 
+
+\boxed{402}",402,402,-0.00046681458054341344,True,True
+"To find the vertical asymptotes of the graph of $y=\frac{2}{x^2+x-6}$, we need to find the values of $x$ for which the denominator is zero, since vertical asymptotes occur when the denominator is zero and the numerator is not.
+
+First, we need to factor the denominator to find its roots:
+
+$x^2+x-6 = (x+3)(x-2)$
+
+So, the denominator is zero when $(x+3) = 0$ or $(x-2) = 0$. 
+
+$(x+3) = 0$ gives $x = -3$
+
+$(x-2) = 0$ gives $x = 2$
+
+Now, we need to check if the numerator is zero at these points. 
+
+For $x = -3$, the numerator is $2$, which is not zero.
+
+For $x = 2$, the numerator is $2$, which is not zero.
+
+Since the denominator is zero and the numerator is not zero at both $x = -3$ and $x = 2$, these are the vertical asymptotes of the graph.
+
+Therefore, the graph has $\boxed{2}$ vertical asymptotes.",2,2,-0.0002180124711173237,True,True
+"To find 120% of 30 and 130% of 20, we first need to convert the percentages into decimals.
+
+$120\%$ can be written as $1.2$, and $130\%$ can be written as $1.3$.
+
+Now, we can find the products:
+$1.2 \times 30 = 36$
+$1.3 \times 20 = 26$
+
+The positive difference between 36 and 26 is:
+$36 - 26 = 10$
+
+So, the positive difference between $120\%$ of 30 and $130\%$ of 20 is $\boxed{10}$.",10,10,-0.001534395166438261,True,True
+"To find the value of $x$, we need to solve for $x$ in the equation $2^8=4^x$.
+
+Since $4$ can be expressed as $2^2$, we can rewrite the equation as:
+$2^8 = (2^2)^x$
+
+Using the property of exponents, we can rewrite the equation as:
+$2^8 = 2^{2x}$
+
+Since the bases are the same (both are 2), we can equate the exponents:
+$8 = 2x$
+
+Now, we can solve for $x$ by dividing both sides of the equation by 2:
+$\frac{8}{2} = x$
+
+Therefore, $x = 4$.
+
+The final answer is: $\boxed{4}$",4,4,-0.0004722399335103876,True,True
+"To find the 100th term of the arithmetic sequence, we need to identify the common difference (d) and the first term (a).
+
+Given sequence: 6, 10, 14, 18,...
+
+First term (a) = 6
+Common difference (d) = 10 - 6 = 4
+
+The formula to find the nth term of an arithmetic sequence is: an = a + (n - 1) * d
+
+where an is the nth term, a is the first term, n is the term number, and d is the common difference.
+
+Now, substitute the values into the formula: 
+an = 6 + (100 - 1) * 4
+an = 6 + 99 * 4
+an = 6 + 396
+an = 402
+
+So, the 100th term of the arithmetic sequence is 402.
+
+\boxed{402}",402,402,-0.0003741707675390975,True,True
+"To find the vertical asymptotes of the graph of the function $y=\frac{2}{x^2+x-6}$, we need to find the values of x for which the denominator of the fraction is equal to zero.
+
+First, we need to factor the denominator:
+
+$x^2+x-6 = (x+3)(x-2)$
+
+Now, we need to set each factor equal to zero and solve for x:
+
+$x+3=0$ or $x-2=0$
+
+$x=-3$ or $x=2$
+
+Therefore, the denominator of the fraction is zero when $x=-3$ or $x=2$. However, since the numerator is not zero at these values, we can conclude that the graph of the function has vertical asymptotes at $x=-3$ and $x=2$.
+
+So, the function has 2 vertical asymptotes.
+
+\boxed{2}",2,2,0.0004512151713800071,True,True
+"Step 1: We are given the equation $2^8=4^x$. To solve for $x$, we can rewrite $4^x$ as $(2^2)^x$ using exponent rules.
+
+Step 2: This gives us $(2^2)^x = 2^8$.
+
+Step 3: Using the power of a power rule in reverse, we can simplify $(2^2)^x$ to $2^{2x}$.
+
+Step 4: Now we have the equation $2^{2x} = 2^8$.
+
+Step 5: Since the bases are the same (both are 2), we can set the exponents equal to each other and solve for $x$. Therefore, we have $2x = 8$.
+
+Step 6: To isolate $x$, we divide both sides of the equation by 2, giving us $x = 4$.
+
+Step 7: Therefore, the value of $x$ is 4.
+
+The final answer is: $\boxed{4}$",4,4,-0.0010459647036239637,True,True
+"To find the 100th term of an arithmetic sequence, we need to know the first term (a) and the common difference (d). In this sequence, the first term (a) is 6, and the common difference (d) is 4.
+
+The formula to find the nth term of an arithmetic sequence is: 
+a_n = a + (n-1)d
+
+where a_n is the nth term, a is the first term, n is the term number, and d is the common difference.
+
+Given the values of a = 6 and d = 4, we can plug them into the formula:
+
+a_100 = 6 + (100-1)4
+a_100 = 6 + (99)4
+a_100 = 6 + 396
+a_100 = 402
+
+Therefore, the 100th term of the arithmetic sequence is 402.
+
+\boxed{402}",402,402,-0.0001613232385329461,True,True
+"To find the vertical asymptotes of the given function $y=\frac{2}{x^2+x-6}$, we need to find the values of $x$ where the denominator is equal to zero, as long as those values are not also zeros of the numerator. 
+
+Step 1: Factor the denominator. The denominator is $x^2 + x - 6$, which can be factored as $(x-2)(x+3)$.
+
+Step 2: Set the denominator equal to zero. $(x-2)(x+3) = 0$
+
+Step 3: Solve for $x$. To solve for $x$, we need to set each factor equal to zero and solve for $x$. $x - 2 = 0$ and $x + 3 = 0$. Therefore, $x = 2$ and $x = -3$.
+
+Step 4: Check if the values of $x$ from Step 3 are zeros of the numerator. The numerator is 2, and both $x=2$ and $x=-3$ do not make the numerator equal to zero, so these are the values where the function has vertical asymptotes.
+
+The final answer is: $\boxed{2}$",2,2,0.00018069103630740865,True,True
+"To find the positive difference between $120\%$ of 30 and $130\%$ of 20, we need to calculate each value and then subtract the smaller one from the larger one.
+
+1. Calculate $120\%$ of 30: 
+$120\%$ of 30 is equal to $1.20 * 30$ which is 36.
+
+2. Calculate $130\%$ of 20: 
+$130\%$ of 20 is equal to $1.30 * 20$ which is 26.
+
+3. Find the positive difference:
+Since 36 is greater than 26, we subtract 26 from 36 to find the positive difference: 
+36 - 26 = 10
+
+The positive difference between $120\%$ of 30 and $130\%$ of 20 is $\boxed{10}$.",10,10,-0.0005984847255234068,True,True
+"Step 1: To find the value of $x$, we need to express both sides of the equation in the same base.
+
+Step 2: The equation $2^8 = 4^x$ can be rewritten with the same base, since $4 = 2^2$.
+So, the equation becomes $(2^2)^x = 2^8$.
+
+Step 3: Using the property of exponents, we can simplify the left-hand side of the equation.
+$(2^2)^x = 2^{2x}$
+
+Step 4: Now we can rewrite the equation with the same base on both sides.
+$2^{2x} = 2^8$
+
+Step 5: Since the bases are equal, we can equate the exponents.
+$2x = 8$
+
+Step 6: Now, we can solve for $x$ by dividing both sides of the equation by 2.
+$x = 8/2$
+
+Step 7: Simplifying the equation, we get
+$x = 4$
+
+The final answer is: $\boxed{4}$",4,4,-0.000969020444359435,True,True
+"To find the 100th term of an arithmetic sequence, we need to know the first term and the common difference. In this case, the first term (a1) is 6 and the common difference (d) is 4 (10 - 6 = 4, 14 - 10 = 4, etc.).
+
+The formula for the nth term of an arithmetic sequence is: an = a1 + (n-1)d
+
+Where an is the nth term, a1 is the first term, n is the term number, and d is the common difference.
+
+We can plug in the values we have into this formula to find the 100th term:
+
+a100 = 6 + (100-1)4
+a100 = 6 + 99*4
+a100 = 6 + 396
+a100 = 402
+
+So the 100th term of the arithmetic sequence 6, 10, 14, 18,... is 402.
+
+\boxed{402}",402,402,-0.000388030326747513,True,True
+"To find $120\%$ of $30$, we multiply $30$ by $1.2$. 
+
+$120\%$ of $30 = 30 \times 1.2 = 36$
+
+To find $130\%$ of $20$, we multiply $20$ by $1.3$.
+
+$130\%$ of $20 = 20 \times 1.3 = 26$
+
+The positive difference between $120\%$ of $30$ and $130\%$ of $20$ is the difference between $36$ and $26$.
+
+Positive difference = $36 - 26 = 10$
+
+Therefore, the positive difference between $120\%$ of 30 and $130\%$ of 20 is $\boxed{10}$.",10,10,-0.0007420692501798301,True,True
+"To find the value of $x$, we need to solve the equation $2^8=4^x$. 
+
+We know that $4$ can be written as $2^2$, so we can rewrite the equation as $2^8=(2^2)^x$.
+
+Using the property of exponents $(a^m)^n = a^{mn}$, we can rewrite $(2^2)^x$ as $2^{2x}$. The equation now becomes:
+
+$2^8 = 2^{2x}$
+
+Since the bases are the same, we can equate the exponents, which gives us:
+
+$8 = 2x$
+
+To find $x$, we need to isolate it. We can do this by dividing both sides of the equation by $2$:
+
+$\frac{8}{2} = \frac{2x}{2}$
+
+This simplifies to:
+
+$4 = x$
+
+Therefore, the value of $x$ is $\boxed{4}$.",4,4,-0.0007104053148036884,True,True
+"To find the 100th term of an arithmetic sequence, we need to find the first term (a) and the common difference (d). 
+
+Given the sequence: 6, 10, 14, 18,...
+
+The common difference (d) is the difference between any two consecutive terms. 
+d = 10 - 6 = 4
+d = 14 - 10 = 4
+d = 18 - 14 = 4
+
+So, the common difference (d) is 4.
+
+The first term (a) is given as 6.
+
+The formula to find the nth term of an arithmetic sequence is: 
+an = a + (n - 1)d
+where an is the nth term, a is the first term, n is the term number, and d is the common difference.
+
+We are looking for the 100th term, so we plug in a = 6, d = 4, and n = 100 into the formula.
+
+a100 = 6 + (100 - 1) * 4
+a100 = 6 + 99 * 4
+a100 = 6 + 396
+a100 = 402
+
+So, the 100th term of the arithmetic sequence is 402.
+
+\boxed{402}",402,402,-0.00035804068588320826,True,True
+"To find vertical asymptotes, we need to look for values of $x$ that would make the denominator of the fraction equal to zero, since vertical asymptotes occur when the function is undefined.
+
+First, let's factor the denominator:
+
+$x^2+x-6 = (x+3)(x-2)$
+
+Now, let's set each factor equal to zero and solve for $x$:
+
+$x+3 = 0$ or $x-2 = 0$
+
+$x = -3$ or $x = 2$
+
+Therefore, the values of $x$ that would make the denominator zero are $-3$ and $2$.
+
+However, in order for a vertical asymptote to exist, the numerator must not be zero at the same value of $x$. Let's check if this is the case:
+
+$y = \frac{2}{x^2+x-6} = \frac{2}{(x+3)(x-2)}$
+
+Since the numerator is not zero at $x = -3$ or $x = 2$, these values of $x$ are vertical asymptotes.
+
+Therefore, the graph of $y=\frac{2}{x^2+x-6}$ has $\boxed{2}$ vertical asymptotes.",2,2,-0.0002861317350633676,True,True
+"To find the positive difference between $120\%$ of 30 and $130\%$ of 20, we first need to calculate the two values separately.
+
+1. Calculate $120\%$ of 30:
+   To do this, we multiply 30 by $120\%$ or 1.2. 
+   $120\%$ of 30 = 1.2 * 30 = 36.
+
+2. Calculate $130\%$ of 20:
+   To do this, we multiply 20 by $130\%$ or 1.3.
+   $130\%$ of 20 = 1.3 * 20 = 26.
+
+3. Now we need to find the difference between the two values.
+   The positive difference is the absolute value of the difference between the two numbers.
+   Positive difference = |36 - 26| = 10.
+
+Therefore, the positive difference is $\boxed{10}$.",10,10,4.0699565921587645e-05,True,True
+"To find the 100th term of the arithmetic sequence, we need to find the first term (a) and the common difference (d) of the sequence.
+
+Step 1: Identify the first term (a) and the common difference (d).
+The first term (a) is 6, and the common difference (d) can be found by subtracting the first term from the second term:
+d = 10 - 6 = 4
+
+Step 2: Use the formula to find the nth term of an arithmetic sequence:
+an = a + (n - 1)d
+
+Step 3: Plug in the values for a, d, and n:
+a = 6
+d = 4
+n = 100
+
+Step 4: Substitute the values into the formula:
+a100 = 6 + (100 - 1) * 4
+a100 = 6 + 99 * 4
+a100 = 6 + 396
+a100 = 402
+
+Therefore, the 100th term of the arithmetic sequence is:
+\boxed{402}",402,402,-0.00059236824077629,True,True
+"To find the vertical asymptotes of a rational function, we need to find the values of x that make the denominator equal to zero and not cancel out with any factors in the numerator.
+
+Given the equation $y=\frac{2}{x^2+x-6}$, we first need to factor the denominator. 
+
+The denominator is a quadratic expression, which can be factored as $x^2 + x - 6 = (x+3)(x-2)$.
+
+Now, let's set the denominator equal to zero and solve for x: $(x+3)(x-2) = 0$. 
+
+We find the values of x that satisfy this equation by setting each factor equal to zero. 
+
+Setting $x+3 = 0$ gives us $x = -3$.
+Setting $x-2 = 0$ gives us $x = 2$.
+
+However, we need to check if these values of x make the numerator equal to zero. 
+
+For $x = -3$, substituting into the numerator gives $2$, which is not zero.
+For $x = 2$, substituting into the numerator gives $2$, which is not zero.
+
+Therefore, both $x = -3$ and $x = 2$ make the denominator zero and do not make the numerator zero.
+
+So, the function has two vertical asymptotes at $x = -3$ and $x = 2$.
+
+The final answer is \boxed{2}.",2,2,-0.0002687434046427674,True,True
+"To find the positive difference between $120\%$ of 30 and $130\%$ of 20, we need to first calculate the two values.
+
+First, we'll find $120\%$ of 30:
+$120\%$ of 30 = $1.2 \times 30 = 36$
+
+Then, we'll find $130\%$ of 20:
+$130\%$ of 20 = $1.3 \times 20 = 26$
+
+Now that we have both values, we can calculate their difference:
+Difference = 36 - 26
+= 10
+
+Therefore, the positive difference between $120\%$ of 30 and $130\%$ of 20 is $\boxed{10}$.",10,10,-0.0014670807346416914,True,True
+"To find the value of x, we need to solve the equation 2^8 = 4^x.
+
+First, let's express both sides with the same base. Since 4 can be expressed as 2^2, we can rewrite the equation as:
+2^8 = (2^2)^x
+
+Using the power of a power rule, we can simplify the right-hand side of the equation to:
+2^8 = 2^(2x)
+
+Since the bases are the same (both are 2), we can equate the exponents:
+8 = 2x
+
+Now, we can solve for x by dividing both sides of the equation by 2:
+x = 8 / 2
+x = 4
+
+So, the value of x is \boxed{4}.",4,4,-0.0015952420243278607,True,True
+"To find the 100th term of an arithmetic sequence, we need to know the first term (a) and the common difference (d). 
+
+In the sequence 6, 10, 14, 18,..., the first term (a) is 6, and the common difference (d) is the difference between consecutive terms, which is 10 - 6 = 4.
+
+The formula to find the nth term of an arithmetic sequence is: 
+
+an = a + (n - 1) * d
+
+Where an is the nth term, a is the first term, n is the term number, and d is the common difference.
+
+Plugging in the values we know, we get:
+
+a = 6
+d = 4
+n = 100
+
+an = 6 + (100 - 1) * 4
+   = 6 + 99 * 4
+   = 6 + 396
+   = 402
+
+Therefore, the 100th term of the sequence is 402.
+
+\boxed{402}",402,402,-0.0006266517034826112,True,True
+"To determine the number of vertical asymptotes for the graph of $y=\frac{2}{x^2+x-6}$, we need to find the values of $x$ for which the denominator equals zero, since division by zero is undefined.
+
+The denominator of the function is $x^2+x-6$, which can be factored as $(x+3)(x-2)$.
+
+Setting the denominator equal to zero, we get $(x+3)(x-2) = 0$. 
+
+Solving for $x$ by setting each factor equal to zero, we find that $x+3=0$ and $x-2=0$. 
+
+Solving for $x$ in both equations, we find that $x=-3$ and $x=2$.
+
+Therefore, the values of $x$ that make the denominator zero are $x=-3$ and $x=2$. 
+
+Since there are two distinct values of $x$, there are two vertical asymptotes at $x=-3$ and $x=2$.
+
+So, the final answer is $\boxed{2}$.",2,2,0.0002567319819096775,True,True
+"To find the positive difference between $120\%$ of 30 and $130\%$ of 20, we first need to calculate the value of each percentage.
+
+$120\%$ of 30 is calculated by multiplying 30 by 1.2 (since $120\%$ is the same as 1.2). 
+
+$1.2 * 30 = 36$
+
+$130\%$ of 20 is calculated by multiplying 20 by 1.3 (since $130\%$ is the same as 1.3).
+
+$1.3 * 20 = 26$
+
+The positive difference is the absolute value of the difference between the two values.
+
+$36 - 26 = 10$
+
+So, the positive difference between $120\%$ of 30 and $130\%$ of 20 is $\boxed{10}$.",10,10,-0.0009279938594475417,True,True
+"To find the value of x, we can rewrite both sides of the equation with the same base. Since we have $2^8$ and $4^x$, we can rewrite 4 as 2^2. This gives us:
+
+$2^8 = (2^2)^x$
+
+Using the rule of exponents that $(a^b)^c = a^{b \cdot c}$, we can simplify the right-hand side of the equation to:
+
+$2^8 = 2^{2x}$
+
+Now we can equate the exponents since the bases are the same. This gives us:
+
+8 = 2x
+
+To solve for x, we can divide both sides of the equation by 2, which results in:
+
+4 = x
+
+Therefore, the value of x is 4.
+
+\boxed{4}",4,4,-0.0012925939303488271,True,True
+"To find the 100th term of the arithmetic sequence, we need to determine the common difference (d) and the first term (a).
+
+Step 1: Find the common difference (d) of the sequence:
+The sequence increases by 4 each time (10 - 6 = 4, 14 - 10 = 4, 18 - 14 = 4). Therefore, the common difference (d) is 4.
+
+Step 2: Determine the formula for the nth term of an arithmetic sequence:
+The formula is a_n = a + (n - 1) * d, where a is the first term, n is the term number, and d is the common difference.
+
+Step 3: Plug in the known values into the formula:
+a = 6 (the first term), d = 4 (the common difference), and n = 100 (the term number).
+
+Step 4: Calculate the 100th term:
+a_100 = a + (n - 1) * d
+= 6 + (100 - 1) * 4
+= 6 + 99 * 4
+= 6 + 396
+= 402
+
+The 100th term of the arithmetic sequence is \boxed{402}.",402,402,-0.0007077408533425209,True,True
+"To find the vertical asymptotes of the given rational function $y = \frac{2}{x^2 + x - 6}$, we need to find the values of x that make the denominator zero.
+
+The denominator is a quadratic expression that can be factored:
+
+$x^2 + x - 6 = (x + 3)(x - 2)$
+
+To find the values of x that make the denominator zero, we set each factor equal to zero and solve for x:
+
+$x + 3 = 0 \implies x = -3$
+
+$x - 2 = 0 \implies x = 2$
+
+Since the numerator of the function is a constant (2), it does not change sign when x changes from $-3$ to $2$ or vice versa. This means that there is no factor in the numerator that cancels out the factors in the denominator, and therefore, the vertical asymptotes are at $x = -3$ and $x = 2$.
+
+However, if there is a common factor in the numerator and the denominator, then the graph will have a hole at that x-value instead of a vertical asymptote. We need to check if $x + 3$ and $x - 2$ are factors of the numerator.
+
+Since $2$ is not a multiple of $-3$ or $2$, the factors $x + 3$ and $x - 2$ are not present in the numerator. Therefore, there are no common factors in the numerator and the denominator, and the graph of $y = \frac{2}{x^2 + x - 6}$ has two vertical asymptotes.
+
+\boxed{2}",2,2,0.0004545205989779063,True,True
+"To find the value of $x$, we can use the properties of exponents. 
+
+Given: $2^8=4^x$
+
+We know that $4$ is equal to $2^2$. So, we can rewrite the equation as:
+
+$2^8 = (2^2)^x$
+
+Using the power of a power rule of exponents, which states that $(a^m)^n = a^{m \cdot n}$, we can simplify the right-hand side:
+
+$2^8 = 2^{2x}$
+
+Since the bases are equal, we can set the exponents equal to each other:
+
+$8 = 2x$
+
+To find $x$, we divide both sides by 2:
+
+$x = 8/2$
+
+$x = 4$
+
+The final answer is: $\boxed{4}$",4,4,-0.0011338146513508165,True,True
+"To find the vertical asymptotes of the graph, we need to find the values of x for which the denominator of the function is equal to zero, as long as those values are not also zeros of the numerator. 
+
+The denominator of the function is given by $x^2 + x - 6$, which is a quadratic function. To find the zeros of this quadratic function, we can factor it as:
+
+$x^2 + x - 6 = (x + 3)(x - 2)$
+
+So, the denominator equals zero when $x + 3 = 0$ or $x - 2 = 0$, which gives us $x = -3$ or $x = 2$.
+
+However, we also need to check if these values are also zeros of the numerator, which is 2. 
+
+Evaluating the numerator at $x = -3$ and $x = 2$, we get:
+
+$2(-3) = -6 \neq 0$
+$2(2) = 4 \neq 0$
+
+Since neither $x = -3$ nor $x = 2$ are zeros of the numerator, we conclude that both are vertical asymptotes.
+
+So, there are 2 vertical asymptotes in the graph of the function $y=\frac{2}{x^2+x-6}$.
+
+\boxed{2}",2,2,-0.00030481001970036095,True,True
+"To find 120% of 30 and 130% of 20, we multiply each number by its respective percentage. 
+
+First, find 120% of 30: 
+120% of 30 = (120/100) * 30
+120% of 30 = 1.2 * 30
+120% of 30 = 36
+
+Next, find 130% of 20: 
+130% of 20 = (130/100) * 20
+130% of 20 = 1.3 * 20
+130% of 20 = 26
+
+Now, subtract 26 from 36 to find the positive difference: 
+36 - 26 = 10
+
+So, the positive difference between 120% of 30 and 130% of 20 is 10. 
+
+\boxed{10}",10,10,-0.0006857138829180103,True,True
+"To find the value of x, we need to express both sides of the equation in terms of the same base.
+
+Given equation: $2^8=4^x$
+
+Express 4 in terms of 2: $4 = 2^2$
+
+Substitute $4 = 2^2$ into the given equation:
+$2^8 = (2^2)^x$
+
+Using the property of exponents, $(a^m)^n = a^{mn}$:
+$2^8 = 2^{2x}$
+
+Since the bases are the same, we can equate the exponents:
+$8 = 2x$
+
+Now, solve for x:
+$x = 8/2$
+$x = 4$
+
+Therefore, the value of x is $\boxed{4}$.",4,4,-0.0009034057797293045,True,True
+"To find the 100th term of an arithmetic sequence, we need to know the first term (a) and the common difference (d). 
+
+In this sequence, the first term (a) is 6, and the common difference (d) is the difference between any two consecutive terms, which is 4 (10 - 6 = 4, 14 - 10 = 4, and so on).
+
+The formula for the nth term of an arithmetic sequence is: 
+an = a + (n-1)d
+
+where an is the nth term, a is the first term, n is the term number, and d is the common difference.
+
+Given a = 6, d = 4, and n = 100, we can plug these values into the formula: 
+an = 6 + (100-1) * 4
+an = 6 + 99 * 4
+an = 6 + 396
+an = 402
+
+The 100th term of the sequence is 402. 
+\boxed{402}",402,402,-0.0002628465783166063,True,True
+"To find the vertical asymptotes of the graph of the function $y = \frac{2}{x^2+x-6}$, we need to determine where the denominator is equal to zero, because division by zero is undefined.
+
+Step 1: Factor the denominator.
+The denominator $x^2+x-6$ can be factored as $(x+3)(x-2)$.
+
+Step 2: Set the denominator equal to zero.
+$(x+3)(x-2) = 0$
+
+Step 3: Solve for x.
+We need to find the values of x that satisfy both factors equal to zero.
+$x + 3 = 0 \implies x = -3$
+$x - 2 = 0 \implies x = 2$
+
+Step 4: Determine if there are any holes in the graph.
+To determine if there are any holes in the graph, we need to check if there are any factors in the numerator that cancel out with the factors in the denominator. 
+In this case, there are no factors in the numerator that can cancel out with the factors in the denominator.
+
+Step 5: Check if the values found are vertical asymptotes or holes.
+Since there are no factors in the numerator to cancel out with the factors in the denominator, the values $x = -3$ and $x = 2$ are vertical asymptotes.
+
+So, the graph of $y=\frac{2}{x^2+x-6}$ has two vertical asymptotes at $x = -3$ and $x = 2$.
+
+The final answer is: $\boxed{2}$",2,2,-0.0002730607621659183,True,True
+"To find the positive difference between $120\%$ of 30 and $130\%$ of 20, we need to calculate each of these values and then subtract them.
+
+1. To find $120\%$ of 30: 
+   This is equal to 1.2 times 30. 
+   1.2 * 30 = 36.
+
+2. To find $130\%$ of 20: 
+   This is equal to 1.3 times 20. 
+   1.3 * 20 = 26.
+
+3. To find the difference: 
+   This is the difference between the two calculated values.
+   Difference = 36 - 26 = 10.
+
+Therefore, the positive difference between $120\%$ of 30 and $130\%$ of 20 is $\boxed{10}$.",10,10,-0.0012771909638250641,True,True
+"To solve for x, we can rewrite the equation as follows:
+
+$2^8 = 4^x$
+
+Since $4 = 2^2$, we can rewrite the equation as:
+
+$2^8 = (2^2)^x$
+
+Using the property of exponents $(a^b)^c = a^{bc}$, we can rewrite the equation as:
+
+$2^8 = 2^{2x}$
+
+Since the bases are the same, we can equate the exponents:
+
+$8 = 2x$
+
+Dividing both sides by 2, we get:
+
+$4 = x$
+
+Therefore, the value of x is:
+
+$\boxed{4}$",4,4,-0.0017117072498380513,True,True
+"To find the 100th term of the arithmetic sequence, we first need to find the common difference (d) and the first term (a).
+
+The common difference is the difference between each consecutive term:
+d = 10 - 6 = 4
+d = 14 - 10 = 4
+d = 18 - 14 = 4
+So, the common difference (d) is 4.
+
+The first term (a) is 6.
+
+The formula to find the nth term of an arithmetic sequence is:
+a_n = a + (n - 1)d
+
+Now, substitute the values of a, d, and n into the formula:
+a_100 = 6 + (100 - 1) * 4
+a_100 = 6 + 99 * 4
+a_100 = 6 + 396
+a_100 = 402
+
+So, the 100th term of the arithmetic sequence is:
+\boxed{402}",402,402,-0.0005858817602577379,True,True
+"To find 120% of 30, we multiply 30 by 1.20 (since 120% = 120/100 = 1.20).
+
+120% of 30 = 30 * 1.20 = 36
+
+To find 130% of 20, we multiply 20 by 1.30 (since 130% = 130/100 = 1.30).
+
+130% of 20 = 20 * 1.30 = 26
+
+Now, we need to find the positive difference between 36 and 26.
+
+Positive difference = |36 - 26| = |10| = 10
+
+Therefore, the positive difference between 120% of 30 and 130% of 20 is 10.
+
+\boxed{10}",10,10,-0.0007543839091725217,True,True
+"To solve for $x$, we can rewrite both sides of the equation using the same base. Since 4 is a power of 2, we can rewrite $4^x$ as $(2^2)^x$. 
+
+Using exponent laws, $(a^m)^n = a^{mn}$, we get $4^x = 2^{2x}$.
+
+Now we can rewrite the original equation as $2^8 = 2^{2x}$. 
+
+Since the bases are equal, the exponents must also be equal. Therefore, $8 = 2x$.
+
+To solve for $x$, divide both sides of the equation by 2: $x = \frac{8}{2} = 4$.
+
+The final answer is: $\boxed{4}$",4,4,-0.0012656473105502682,True,True
+"To find the vertical asymptotes of the graph of $y=\frac{2}{x^2+x-6}$, we need to find the values of x where the denominator is zero. 
+
+First, we need to factor the denominator to find its zeros.
+
+The denominator can be factored as $x^2+x-6 = (x+3)(x-2)$. 
+
+Therefore, the values of x where the denominator is zero are $x=-3$ and $x=2$. 
+
+These are the potential vertical asymptotes, but we need to check if the numerator has any factors that cancel out the factors in the denominator. 
+
+The numerator is 2, which is a constant and does not cancel out the factors in the denominator.
+
+Therefore, the vertical asymptotes are $x=-3$ and $x=2$. So the number of vertical asymptotes is 2.
+
+\boxed{2}",2,2,0.0003483312556205159,True,True
+"To find 120% of 30, we multiply 30 by 1.2: 
+1.2 * 30 = 36.
+
+To find 130% of 20, we multiply 20 by 1.3: 
+1.3 * 20 = 26.
+
+Now, we need to find the positive difference between the two results. Subtract 26 from 36: 
+36 - 26 = 10.
+
+The positive difference between $120\%$ of 30 and $130\%$ of 20 is 10.
+
+\boxed{10}",10,10,-0.0005326101336112885,True,True
+"To find the value of $x$, we need to rewrite the equation in terms of a common base. Since $2^8 = (2^2)^4 = 4^4$, we can rewrite the equation as $4^4 = 4^x$.
+
+Since the bases are the same (4), we can equate the exponents:
+
+4^4 = 4^x
+4 = x
+
+So, the value of $x$ is 4.
+
+The final answer is: \boxed{4}",4,4,-0.0016799669559158128,True,True
+"To find the 100th term of the arithmetic sequence, we need to determine the first term (a) and the common difference (d).
+
+The first term (a) is 6, and the common difference (d) is 10 - 6 = 4.
+
+The general formula for the nth term of an arithmetic sequence is a + (n - 1) * d, where a is the first term and d is the common difference.
+
+Substituting a = 6, d = 4, and n = 100 into the formula:
+
+a + (n - 1) * d = 6 + (100 - 1) * 4
+a + (n - 1) * d = 6 + 99 * 4
+a + (n - 1) * d = 6 + 396
+a + (n - 1) * d = 402
+
+Therefore, the 100th term of the arithmetic sequence is 402. 
+
+\boxed{402}",402,402,-0.0011866887142716071,True,True
