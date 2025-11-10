@@ -251,9 +251,9 @@ def run(args):
     dataset = load_dataset(args.data_dir)
 
     questions = dataset["question"].tolist()
-    questions = questions[:4]
+    questions = questions[:500]
     answers = dataset["numeric_final_answer"].astype(str).tolist()
-    answers = answers[:4]
+    answers = answers[:500]
     completions = []
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)

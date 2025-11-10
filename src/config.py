@@ -142,6 +142,14 @@ greedy_configs = {
 
 # List of different settings to run
 sampling_configs = {
+
+    "mars":{
+        "decoding_mode": '',
+        "method": "mars",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy", 
+    },
     
     "group_entropy": {
         "decoding_mode": '',
@@ -335,7 +343,7 @@ class Config:
     )
 
     # Sampling parameters
-    k: int = int(os.getenv("K", 16))
+    k: int = int(os.getenv("K", 1))
     num_beams: int = int(os.getenv("NUM_BEAMS", 1))
     temperature: float = float(os.getenv("TEMPERATURE", 1.0))
     top_p: float = float(os.getenv("TOP_P", 1.0))

@@ -23,6 +23,7 @@ from src.methods.attention_weighted_confidence import attention_weighted_confide
 from src.methods.trend_estimation import trend_estimation
 from src.methods.attention_dynamic import attention_dynamic
 from src.methods.group_entropy import group_entropy
+from src.methods.mars import mars
 
 
 def handle_sampling_group(
@@ -161,6 +162,9 @@ def handle_sampling_group(
 
             elif method_name == "group_entropy":
                 method_output = group_entropy(sample_paths, tokenizer, config)
+
+            elif method_name == "mars":
+                method_output = mars(sample_paths, True, tokenizer, config)
 
             method_result.append(
                 (method_output[0], method_output[1], method_output[2])
@@ -420,8 +424,7 @@ def run(config):
     Args:
         config (Config): A configuration object.
     """
-    # Print the provided configurations
-    print("=" * 50)
+    # Print the provid    print("=" * 50)
     print("Configurations:")
     print(f"Model name: {config.model_name}")
     print(f"Lingua model name: {config.lingua_model_name}")
