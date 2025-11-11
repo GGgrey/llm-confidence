@@ -4,10 +4,11 @@ import torch.nn.functional as F
 from src.utils import aggregate_paths_based_on_scores_using_min
 
 
-def group_entropy(sample_paths, tokenizer, config, k=3):
+def group_entropy(sample_paths, method_cfg, tokenizer, config):
     
     method_records = []
     entropy_list = []
+    k = method_cfg["k"]
 
     for path in sample_paths:
         answer_ids = path["answer_ids"]

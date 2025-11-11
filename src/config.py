@@ -132,11 +132,8 @@ cer_configs = {
 # Greedy configs
 greedy_configs = {
     "greedy": {
-        "decoding_mode": 'all',
         "method": "greedy",
-        "scoring_mode": 'log',
         "sampling_mode": "greedy",
-        "confidence": "default",
     },
 }
 
@@ -144,52 +141,46 @@ greedy_configs = {
 sampling_configs = {
 
     "quantile_90": {
-        "decoding_mode": '',
-        "method": "group_entropy",
-        "scoring_mode": 'log',
+        "method": "quantile_90",
+        "scoring_mode": 'quantile',
         "sampling_mode": "temperature",
-        "confidence": "entropy",
+        "confidence": "logp",
         "alpha": 0.9
     },
 
     "quantile_75": {
-        "decoding_mode": '',
-        "method": "group_entropy",
-        "scoring_mode": 'log',
+        "method": "quantile_75",
+        "scoring_mode": 'quantile',
         "sampling_mode": "temperature",
-        "confidence": "entropy",
+        "confidence": "logp",
         "alpha": 0.75
     },
 
     "quantile_50": {
-        "decoding_mode": '',
-        "method": "group_entropy",
-        "scoring_mode": 'log',
+        "method": "quantile_50",
+        "scoring_mode": 'quantile',
         "sampling_mode": "temperature",
-        "confidence": "entropy",
+        "confidence": "logp",
         "alpha": 0.5
     },
 
     "quantile_25": {
-        "decoding_mode": '',
-        "method": "group_entropy",
-        "scoring_mode": 'log',
+        "method": "quantile_25",
+        "scoring_mode": 'quantile',
         "sampling_mode": "temperature",
-        "confidence": "entropy",
+        "confidence": "logp",
         "alpha": 0.25
     },
 
     "quantile_10": {
-        "decoding_mode": '',
-        "method": "group_entropy",
-        "scoring_mode": 'log',
+        "method": "quantile_10",
+        "scoring_mode": 'quantile',
         "sampling_mode": "temperature",
-        "confidence": "entropy",
+        "confidence": "logp",
         "alpha": 0.1
     },
 
     # "mars":{  # Todo
-    #     "decoding_mode": '',
     #     "method": "mars",
     #     "scoring_mode": 'log',
     #     "sampling_mode": "temperature",
@@ -197,32 +188,75 @@ sampling_configs = {
     # },
     
     "group_entropy": {
-        "decoding_mode": '',
         "method": "group_entropy",
-        "scoring_mode": 'log',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
         "confidence": "entropy",
+        "k": 3
+    },
+
+    "gibbs_entropy_lin": {
+        "method": "xentropy",
+        "scoring_mode": 'linear_normalization',
+        "sampling_mode": "temperature",
+        "confidence": "gibbs_entropy",
+    },
+
+    "gibbs_entropy_exp": {
+        "method": "xentropy",
+        "scoring_mode": 'exponential_normalization',
+        "sampling_mode": "temperature",
+        "confidence": "gibbs_entropy",
+    },
+
+    "tsallis_entropy_lin": {
+        "method": "xentropy",
+        "scoring_mode": 'linear_normalization',
+        "sampling_mode": "temperature",
+        "confidence": "tsallis_entropy",
+        "alpha": 0.3
+    },
+
+    "tsallis_entropy_exp": {
+        "method": "xentropy",
+        "scoring_mode": 'exponential_normalization',
+        "sampling_mode": "temperature",
+        "confidence": "tsallis_entropy",
+        "alpha": 0.3
+    },
+
+    "renyi_entropy_lin": {
+        "method": "xentropy",
+        "scoring_mode": 'linear_normalization',
+        "sampling_mode": "temperature",
+        "confidence": "renyi_entropy",
+        "alpha": 0.3
+    },
+
+    "renyi_entropy_exp": {
+        "method": "xentropy",
+        "scoring_mode": 'exponential_normalization',
+        "sampling_mode": "temperature",
+        "confidence": "renyi_entropy",
+        "alpha": 0.3
     },
 
     # "attention_dynamic": {
-    #     "decoding_mode": '',
     #     "method": "attention_dynamic",
-    #     "scoring_mode": 'log',
+    #     "scoring_mode": 'union',
     #     "sampling_mode": "temperature",
     #     "confidence": "entropy",
     # },
 
     # "trend_estimation": {
-    #     "decoding_mode": '',
     #     "method": "trend_estimation",
     #     "estimation_method": "linear_regression",
-    #     "scoring_mode": 'log',
+    #     "scoring_mode": '',
     #     "sampling_mode": "temperature",
-    #     "confidence": "entropy",
+    #     "confidence": "",
     # },
 
     # "attention_weighted_confidence": {
-    #     "decoding_mode": '',
     #     "method": "attention_weighted_confidence",
     #     "scoring_mode": 'log',
     #     "sampling_mode": "temperature",

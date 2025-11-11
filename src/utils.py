@@ -2,7 +2,7 @@ import random
 import re
 import os
 from typing import List, Optional, Tuple
-os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import numpy as np
 import pandas as pd
@@ -34,7 +34,7 @@ def load_model_and_tokenizer(model_name, read_model_from_huggingface=True):
         local_files_only=read_model_from_huggingface,
         trust_remote_code=True,
         torch_dtype=torch.bfloat16,
-        attn_implementation="eager"
+        attn_implementation="flash_attention_2"
     )
     model = model.eval()
 

@@ -10,6 +10,8 @@ import tensorflow_hub as hub
 import tensorflow_text as text
 from scipy.special import softmax
 
+from src.utils import aggregate_paths_based_on_scores_using_min
+
 
 tagger = SequenceTagger.load("flair/chunk-english")
 
@@ -159,16 +161,26 @@ def mars(sample_paths, normalized_length, tokenizer, config):
 
             for i, (s, e) in enumerate(offsets):
                 if s <= phrase_start_idx < e:
-                    answer_token_start_idx = i
+                    phrase_token_start_idx = i
                 if s < phrase_end_idx + len(phrase) <= e:
-                    answer_token_end_idx = i + 1
-                if answer_token_start_idx is not None and answer_token_end_idx is not None:
+                    phrase_token_end_idx = i + 1
+                if phrase_token_start_idx is not None and phrase_token_end_idx is not None:
                     break
-            phrase_token_spans.append((answer_token_start_idx, answer_token_end_idx))
+            phrase_token_spans.append((phrase_token_start_idx, phrase_token_end_idx))
         
         if not phrase_token_spans or len(phrase_token_spans) != len(phrase):
             method_records.append((answer_text, 0.0, final_answer))
             continue
+
+        method_records.append((answer_text, 0.0, final_answer))
+
+    if not method_records or len(method_records) != len(sample_paths):
+        raise RuntimeError("Decoding error")
+
+    if config.aggregate:
+        return aggregate_paths_based_on_scores_using_min(method_records)
+    else:
+        return (min(method_records, key=lambda x: x[1]))
 
 
 

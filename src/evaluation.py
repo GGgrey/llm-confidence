@@ -24,6 +24,7 @@ from src.methods.trend_estimation import trend_estimation
 from src.methods.attention_dynamic import attention_dynamic
 from src.methods.group_entropy import group_entropy
 from src.methods.quantile import quantile
+from src.methods.xentropy import xentropy
 # from src.methods.mars import mars
 
 
@@ -162,7 +163,7 @@ def handle_sampling_group(
                 method_output = attention_dynamic(sample_paths, method_cfg, model, tokenizer, config)
 
             elif method_name == "group_entropy":
-                method_output = group_entropy(sample_paths, tokenizer, config)
+                method_output = group_entropy(sample_paths, method_cfg, tokenizer, config)
 
             elif method_name == "quantile_10":
                 method_output = quantile(sample_paths, method_cfg, config)
@@ -178,6 +179,11 @@ def handle_sampling_group(
 
             elif method_name == "quantile_90":
                 method_output = quantile(sample_paths, method_cfg, config)
+
+            elif method_name == "gibbs_entropy_lin" or method_name == "gibbs_entropy_exp" or \
+                method_name == "tsallis_entropy_lin" or method_name == "tsallis_entropy_exp" or \
+                method_name == "renyi_entropy_lin" or method_name == "renyi_entropy_exp":
+                method_output = xentropy(sample_paths, method_cfg, config)
 
             # elif method_name == "mars":  # Todo
             #     method_output = mars(sample_paths, True, tokenizer, config)
