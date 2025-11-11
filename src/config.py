@@ -143,13 +143,58 @@ greedy_configs = {
 # List of different settings to run
 sampling_configs = {
 
-    "mars":{
+    "quantile_90": {
         "decoding_mode": '',
-        "method": "mars",
+        "method": "group_entropy",
         "scoring_mode": 'log',
         "sampling_mode": "temperature",
-        "confidence": "entropy", 
+        "confidence": "entropy",
+        "alpha": 0.9
     },
+
+    "quantile_75": {
+        "decoding_mode": '',
+        "method": "group_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "alpha": 0.75
+    },
+
+    "quantile_50": {
+        "decoding_mode": '',
+        "method": "group_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "alpha": 0.5
+    },
+
+    "quantile_25": {
+        "decoding_mode": '',
+        "method": "group_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "alpha": 0.25
+    },
+
+    "quantile_10": {
+        "decoding_mode": '',
+        "method": "group_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "alpha": 0.1
+    },
+
+    # "mars":{  # Todo
+    #     "decoding_mode": '',
+    #     "method": "mars",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy", 
+    # },
     
     "group_entropy": {
         "decoding_mode": '',
@@ -216,13 +261,13 @@ sampling_configs = {
         "confidence": "default",
     },
 
-    "p_true": {
-        "decoding_mode": '',
-        "method": "p_true",
-        "scoring_mode": 'log',
-        "sampling_mode": "temperature",
-        "confidence": "default",
-    },
+    # "p_true": {
+    #     "decoding_mode": '',
+    #     "method": "p_true",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "default",
+    # },
 
     # "predictive_entropy": {
     #     "decoding_mode": '',
@@ -343,7 +388,7 @@ class Config:
     )
 
     # Sampling parameters
-    k: int = int(os.getenv("K", 1))
+    k: int = int(os.getenv("K", 16))
     num_beams: int = int(os.getenv("NUM_BEAMS", 1))
     temperature: float = float(os.getenv("TEMPERATURE", 1.0))
     top_p: float = float(os.getenv("TOP_P", 1.0))

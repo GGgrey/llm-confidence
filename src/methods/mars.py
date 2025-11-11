@@ -145,7 +145,7 @@ def mars(sample_paths, normalized_length, tokenizer, config):
         entropy = -torch.sum(probs * torch.log(probs + 1e-9), dim=-1)
 
         importance_scores, phrases, positions = get_importance_scores(answer_text, question_text)
-        if not importance_scores or len(phrases) != len(positions):
+        if importance_scores.size == 0 or len(phrases) != len(positions):
             method_records.append((answer_text, 0.0, final_answer))
             continue
             

@@ -23,7 +23,8 @@ from src.methods.attention_weighted_confidence import attention_weighted_confide
 from src.methods.trend_estimation import trend_estimation
 from src.methods.attention_dynamic import attention_dynamic
 from src.methods.group_entropy import group_entropy
-from src.methods.mars import mars
+from src.methods.quantile import quantile
+# from src.methods.mars import mars
 
 
 def handle_sampling_group(
@@ -163,8 +164,23 @@ def handle_sampling_group(
             elif method_name == "group_entropy":
                 method_output = group_entropy(sample_paths, tokenizer, config)
 
-            elif method_name == "mars":
-                method_output = mars(sample_paths, True, tokenizer, config)
+            elif method_name == "quantile_10":
+                method_output = quantile(sample_paths, method_cfg, config)
+
+            elif method_name == "quantile_25":
+                method_output = quantile(sample_paths, method_cfg, config)
+            
+            elif method_name == "quantile_50":
+                method_output = quantile(sample_paths, method_cfg, config)
+            
+            elif method_name == "quantile_75":
+                method_output = quantile(sample_paths, method_cfg, config)
+
+            elif method_name == "quantile_90":
+                method_output = quantile(sample_paths, method_cfg, config)
+
+            # elif method_name == "mars":  # Todo
+            #     method_output = mars(sample_paths, True, tokenizer, config)
 
             method_result.append(
                 (method_output[0], method_output[1], method_output[2])
