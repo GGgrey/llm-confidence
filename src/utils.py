@@ -2,7 +2,7 @@ import random
 import re
 import os
 from typing import List, Optional, Tuple
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 import numpy as np
 import pandas as pd

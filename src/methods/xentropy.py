@@ -4,76 +4,93 @@ import torch.nn.functional as F
 from src.utils import aggregate_paths_based_on_scores
 
 
-def neg_gibbs_entropy(log_p):
-    p = torch.exp(log_p)
-    return torch.sum(p * log_p, dim=-1)
+def gibbs_entropy_lin(probs, vocab_size, alpha=1.0):
+    """Linearly normalized Gibbs entropy-based confidence"""
+    H_g = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
+    max_H_g = torch.log(torch.tensor(vocab_size, dtype=probs.dtype, device=probs.device))
+    return 1 - H_g / max_H_g
 
 
-def neg_entropy_alpha(log_p, t):
-    return torch.sum(torch.exp(log_p * t), dim=-1)
+def gibbs_entropy_exp(probs, vocab_size, alpha=1.0):
+    """Exponentially normalized Gibbs entropy-based confidence"""
+    sum_p_log_p = torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
+    return (vocab_size * torch.exp(sum_p_log_p) - 1) / (vocab_size - 1)
 
 
-def neg_gibbs_entropy_alpha(log_p, t):
-    p_t = torch.exp(log_p * t)
-    return torch.sum(p_t * log_p, dim=-1)
+def tsallis_entropy_lin(probs, vocab_size, alpha):
+    """Linearly normalized Tsallis entropy-based confidence"""
+    V = torch.tensor(vocab_size, dtype=probs.dtype, device=probs.device)
+
+    if abs(alpha - 1.0) < 1e-8:
+        H_g = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
+        max_H_g = torch.log(V)
+        return 1 - H_g / max_H_g
+
+    sum_p_alpha = torch.sum(probs ** alpha, dim=-1)
+    return (V ** (1 - alpha) - sum_p_alpha) / (V ** (1 - alpha) - 1)
 
 
-def max_prob_confidence(log_p, V, t):
-    if t == 1.0:
-        p_max = torch.exp(torch.max(log_p, dim=-1)[0])
-        return (p_max * V - 1) / (V - 1)
-    else:
-        p_max_t = torch.exp(torch.max(log_p, dim=-1)[0] * t)
-        return (p_max_t * (V ** t) - 1) / ((V ** t) - 1)
+def tsallis_entropy_exp(probs, vocab_size, alpha):
+    """Exponentially normalized Tsallis entropy-based confidence"""
+    V = torch.tensor(vocab_size, dtype=probs.dtype, device=probs.device)
+
+    if abs(alpha - 1.0) < 1e-8:
+        sum_p_log_p = torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
+        return (vocab_size * torch.exp(sum_p_log_p) - 1) / (vocab_size - 1)
+
+    sum_p_alpha = torch.sum(probs ** alpha, dim=-1)
+    num = torch.exp((V ** (1 - alpha) - sum_p_alpha) / (1 - alpha)) - 1
+    den = torch.exp((V ** (1 - alpha) - 1) / (1 - alpha)) - 1
+    return num / (den + 1e-12)
 
 
-def gibbs_entropy_lin(log_p, V, t):
-    if t == 1.0:
-        return 1.0 + neg_gibbs_entropy(log_p) / torch.log(torch.tensor(V, dtype=log_p.dtype))
-    else:
-        return 1.0 + neg_gibbs_entropy_alpha(log_p, t) / torch.log(torch.tensor(V, dtype=log_p.dtype)) / (V ** (1 - t))
-    
+def tsallis_entropy_exp_stable(probs, vocab_size, alpha):
+    V = torch.tensor(vocab_size, dtype=probs.dtype, device=probs.device)
 
-def gibbs_entropy_exp(log_p, V, t):
-    if t == 1.0:
-        Hg = neg_gibbs_entropy(log_p)
-        return (torch.exp(Hg) * V - 1) / (V - 1)
-    else:
-        exp_neg_max_ent = V ** (-t * (V ** (1 - t)))
-        return (torch.exp(neg_gibbs_entropy_alpha(log_p, t) * t) - exp_neg_max_ent) / (1 - exp_neg_max_ent)
-    
+    if abs(alpha - 1.0) < 1e-8:
+        sum_p_log_p = torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
+        return (vocab_size * torch.exp(sum_p_log_p) - 1) / (vocab_size - 1)
 
-def tsallis_entropy_lin(log_p, V, t):
-    if t == 1.0:
-        return 1.0 + neg_gibbs_entropy(log_p) / torch.log(torch.tensor(V, dtype=log_p.dtype))
-    else:
-        return 1.0 + (1.0 - neg_entropy_alpha(log_p, t)) / ((V ** (1 - t)) - 1)
-    
+    sum_p_alpha = torch.sum(probs ** alpha, dim=-1)
+    A = (V ** (1 - alpha) - sum_p_alpha) / (1 - alpha)
+    B = (V ** (1 - alpha) - 1) / (1 - alpha)
 
-def tsallis_entropy_exp(log_p, V, t):
-    if t == 1.0:
-        Hg = neg_gibbs_entropy(log_p)
-        return (torch.exp(Hg) * V - 1) / (V - 1)
-    else:
-        exp_neg_max_ent = torch.exp((1.0 - (V ** (1 - t))) / (1.0 - t))
-        num = torch.exp((1.0 - neg_entropy_alpha(log_p, t)) / (1.0 - t)) - exp_neg_max_ent
-        denom = 1.0 - exp_neg_max_ent
-        return num / denom
-    
+    threshold = 50.0
 
-def renyi_entropy_lin(log_p, V, t):
-    if t == 1.0:
-        return 1.0 + neg_gibbs_entropy(log_p) / torch.log(torch.tensor(V, dtype=log_p.dtype))
-    else:
-        return 1.0 + torch.log2(neg_entropy_alpha(log_p, t)) / (t - 1) / torch.log(torch.tensor(V, dtype=log_p.dtype), 2)
-    
+    if A.ndim == 0:
+        if (A > threshold) and (B > threshold):
+            return torch.exp(A - B)
+        else:
+            return torch.expm1(A) / (torch.expm1(B) + 1e-12)
+        
+    large_mask = (A > threshold) & (B > threshold)
+    F = torch.empty_like(A)
 
-def renyi_entropy_exp(log_p, V, t):
-    if t == 1.0:
-        Hg = neg_gibbs_entropy(log_p)
-        return (torch.exp(Hg) * V - 1) / (V - 1)
-    else:
-        return ((neg_entropy_alpha(log_p, t)) ** (1 / (t - 1)) * V - 1) / (V - 1)
+    F[~large_mask] = torch.expm1(A[~large_mask]) / (torch.expm1(B) + 1e-12)
+    F[large_mask] = torch.exp(A[large_mask] - B)
+
+    return F
+
+
+def renyi_entropy_lin(probs, vocab_size, alpha):
+    """Linearly normalized Rényi entropy-based confidence"""
+    V = torch.tensor(vocab_size, dtype=probs.dtype, device=probs.device)
+
+    if abs(alpha - 1.0) < 1e-8:
+        H_g = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1)
+        max_H_g = torch.log(V)
+        return 1 - H_g / max_H_g
+
+    sum_p_alpha = torch.sum(probs ** alpha, dim=-1)
+    log_base_V = torch.log(sum_p_alpha + 1e-12) / torch.log(V)
+    return 1 + log_base_V / (alpha - 1)
+
+
+def renyi_entropy_exp(probs, vocab_size, alpha):
+    """Exponentially normalized Rényi entropy-based confidence"""
+    V = torch.tensor(vocab_size, dtype=probs.dtype, device=probs.device)
+    sum_p_alpha = torch.sum(probs ** alpha, dim=-1)
+    return (V * (sum_p_alpha ** (1 / (alpha - 1))) - 1) / (V - 1)
 
 
 def xentropy(sample_paths, method_cfg, config):
@@ -88,31 +105,36 @@ def xentropy(sample_paths, method_cfg, config):
         answer_text = path["answer_text"]
         output_scores = path["output_scores"]
 
-        log_probs = F.log_softmax(output_scores, dim=-1)
-        vocab_size = log_probs.size(-1)
+        probs = F.softmax(output_scores, dim=-1)
+        vocab_size = probs.size(-1)
 
-        if confidence_method == "gibbs_entropy":
-            if scoring_mode == "linear_normalization":
-                confidence = gibbs_entropy_lin(log_probs, vocab_size, alpha)
-            else:
-                confidence = gibbs_entropy_exp(log_probs, vocab_size, alpha)
-        
-        elif confidence_method == "tsallis_entropy":
-            if scoring_mode == "linear_normalization":
-                confidence = tsallis_entropy_lin(log_probs, vocab_size, alpha)
-            else:
-                confidence = tsallis_entropy_exp(log_probs, vocab_size, alpha)
-
-        elif confidence_method == "renyi_entropy":
-            if scoring_mode == "linear_normalization":
-                confidence = renyi_entropy_lin(log_probs, vocab_size, alpha)
-            else:
-                confidence = renyi_entropy_exp(log_probs, vocab_size, alpha)
-
+        if confidence_method == "gibbs_entropy_lin":
+            entropy = gibbs_entropy_lin(probs, vocab_size, alpha)
+        elif confidence_method == "gibbs_entropy_exp":
+            entropy = gibbs_entropy_exp(probs, vocab_size, alpha)
+        elif confidence_method == "tsallis_entropy_lin":
+            entropy = tsallis_entropy_lin(probs, vocab_size, alpha)
+        elif confidence_method == "tsallis_entropy_exp":
+            entropy = tsallis_entropy_exp_stable(probs, vocab_size, alpha)
+        elif confidence_method == "renyi_entropy_lin":
+            entropy = renyi_entropy_lin(probs, vocab_size, alpha)
+        elif confidence_method == "renyi_entropy_exp":
+            entropy = renyi_entropy_exp(probs, vocab_size, alpha)
         else:
             raise ValueError(f"Unknown confidence method: {confidence_method}")
         
-        method_records.append((answer_text, confidence, final_answer))
+        if scoring_mode == "min":
+            confidence = torch.min(entropy, dim=-1)[0]
+        elif scoring_mode == "max":
+            confidence = torch.max(entropy, dim=-1)[0]
+        elif scoring_mode == "mean":
+            confidence = torch.mean(entropy, dim=-1)
+        elif scoring_mode == "product":
+            confidence = torch.prod(entropy, dim=-1)
+        else:
+            raise ValueError(f"Unknown scoring mode: {scoring_mode}")
+        
+        method_records.append((answer_text, confidence.item(), final_answer))
 
     if not method_records or len(method_records) != len(sample_paths):
         raise RuntimeError("Decoding error")

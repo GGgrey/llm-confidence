@@ -197,48 +197,48 @@ sampling_configs = {
 
     "gibbs_entropy_lin": {
         "method": "xentropy",
-        "scoring_mode": 'linear_normalization',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
-        "confidence": "gibbs_entropy",
+        "confidence": "gibbs_entropy_lin",
     },
 
     "gibbs_entropy_exp": {
         "method": "xentropy",
-        "scoring_mode": 'exponential_normalization',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
-        "confidence": "gibbs_entropy",
+        "confidence": "gibbs_entropy_exp",
     },
 
     "tsallis_entropy_lin": {
         "method": "xentropy",
-        "scoring_mode": 'linear_normalization',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
-        "confidence": "tsallis_entropy",
-        "alpha": 0.3
+        "confidence": "tsallis_entropy_lin",
+        "alpha": 0.5
     },
 
     "tsallis_entropy_exp": {
         "method": "xentropy",
-        "scoring_mode": 'exponential_normalization',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
-        "confidence": "tsallis_entropy",
-        "alpha": 0.3
+        "confidence": "tsallis_entropy_exp",
+        "alpha": 0.5
     },
 
     "renyi_entropy_lin": {
         "method": "xentropy",
-        "scoring_mode": 'linear_normalization',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
-        "confidence": "renyi_entropy",
-        "alpha": 0.3
+        "confidence": "renyi_entropy_lin",
+        "alpha": 0.5
     },
 
     "renyi_entropy_exp": {
         "method": "xentropy",
-        "scoring_mode": 'exponential_normalization',
+        "scoring_mode": 'mean',
         "sampling_mode": "temperature",
-        "confidence": "renyi_entropy",
-        "alpha": 0.3
+        "confidence": "renyi_entropy_exp",
+        "alpha": 0.5
     },
 
     # "attention_dynamic": {
@@ -404,7 +404,7 @@ method_groups = {
 class Config:
     # Path to the HuggingFace model or local directory
     model_name: str = os.getenv(
-        "MODEL_NAME", "/data/sunqiao/projects/models/Llama-3.1-8B-Instruct"
+        "MODEL_NAME", "/data1/sunq/projects/models/meta-llama/Llama-3.1-8B-Instruct"
     )
     lingua_model_name: str = os.getenv(
         "LLMLINGUA_MODEL_NAME", "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
