@@ -147,6 +147,7 @@ def handle_sampling_group(
             early_stopping=config.early_stopping,
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=tokenizer.eos_token_id,
+            use_cache=True,
             output_scores=True,
             return_dict_in_generate=True,
         )
@@ -243,6 +244,7 @@ def handle_greedy_group(
         early_stopping=config.early_stopping,
         pad_token_id=tokenizer.pad_token_id,
         eos_token_id=tokenizer.eos_token_id,
+        use_cache=True,
         output_scores=True,
         return_dict_in_generate=True,
     )
