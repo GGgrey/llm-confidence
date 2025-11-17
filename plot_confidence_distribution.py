@@ -21,7 +21,7 @@ def get_available_gpus(exclude_list: str):
     exclude = set([int(x) for x in exclude_list.split(",") if x.strip() != ""])
     available = [i for i in range(num_gpus) if i not in exclude]
     if not available:
-        raise RuntimeError("No GPUs available after applying exclusion list.")
+        raise RuntimeError("No GPUs available after applying exclusion list")
     return available
 
 
@@ -163,7 +163,7 @@ def run_inference(
     max_new_tokens=2048,
 ):
     if len(available_gpus) == 0:
-        raise RuntimeError("No CUDA devices available.")
+        raise RuntimeError("No CUDA devices available")
     
     selected_gpu = available_gpus[worker_id % len(available_gpus)]
     os.environ["CUDA_VISIBLE_DEVICES"] = str(selected_gpu)
@@ -218,7 +218,7 @@ def run_inference(
         elif confidence_method == "entropy_trend":
             confidence = compute_entropy_trend_confidence(output_scores, answer_ids, tokenizer)
         else:
-            raise ValueError("Confidence method is not supported.")
+            raise ValueError("Confidence method is not supported")
 
         is_valid = final_answer is not None
         try:
@@ -309,7 +309,7 @@ def run(args):
         completions = [output for sublist in results for output in sublist]
     
     if not completions or len(completions) != len(upsampled_tokenized_massages):
-        raise ValueError("Completions are not valid.")
+        raise ValueError("Completions are not valid")
 
     df = pd.DataFrame(completions)
     df = df[df["is_valid"]]
@@ -362,11 +362,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data_dir", "-d", type=str, default="data/src_custom_datasets_math_dataset_test_processed.parquet")
-    parser.add_argument("--model", type=str, default="/data/sunqiao/projects/models/Llama-3.1-8B-Instruct")
+    parser.add_argument("--model", type=str, default="/models/meta-llama/Llama-3.1-8B-Instruct")
     parser.add_argument(
         "--confidence_method",
         type=str,
-        default="entropy_trend",
+        default="mean_confidence",
         choices=[
             "mean_confidence",
             "perplexity",
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--exclude_gpus",
         type=str,
-        default="",
+        default="3",
         help="Comma-separated list of GPU ids to exclude, e.g. '2' or '1,3'."
     )
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import os
+from itertools import product
 
 from dotenv import load_dotenv
 
@@ -137,48 +138,27 @@ greedy_configs = {
     },
 }
 
+# Quantile-based methods
+quantile_conf_alpha_map = {
+    "prob": [x / 100 for x in range(0, 101, 5)],
+    "entropy": [x / 100 for x in range(0, 101, 5)],
+    "logit": [x / 100 for x in range(0, 101, 5)],
+}
+sampling_configs = {}
+
+for conf, alphas in quantile_conf_alpha_map.items():
+    for alpha in alphas:
+        name = f"quantile_{int(alpha*100)}_{conf}"
+        sampling_configs[name] = {
+            "method": name,
+            "scoring_mode": 'quantile',
+            "sampling_mode": "temperature",
+            "confidence": conf,
+            "alpha": alpha
+        }
+
 # List of different settings to run
-sampling_configs = {
-
-    "quantile_90": {
-        "method": "quantile_90",
-        "scoring_mode": 'quantile',
-        "sampling_mode": "temperature",
-        "confidence": "logp",
-        "alpha": 0.9
-    },
-
-    "quantile_75": {
-        "method": "quantile_75",
-        "scoring_mode": 'quantile',
-        "sampling_mode": "temperature",
-        "confidence": "logp",
-        "alpha": 0.75
-    },
-
-    "quantile_50": {
-        "method": "quantile_50",
-        "scoring_mode": 'quantile',
-        "sampling_mode": "temperature",
-        "confidence": "logp",
-        "alpha": 0.5
-    },
-
-    "quantile_25": {
-        "method": "quantile_25",
-        "scoring_mode": 'quantile',
-        "sampling_mode": "temperature",
-        "confidence": "logp",
-        "alpha": 0.25
-    },
-
-    "quantile_10": {
-        "method": "quantile_10",
-        "scoring_mode": 'quantile',
-        "sampling_mode": "temperature",
-        "confidence": "logp",
-        "alpha": 0.1
-    },
+sampling_configs.update({
 
     # "mars":{  # Todo
     #     "method": "mars",
@@ -214,7 +194,7 @@ sampling_configs = {
         "scoring_mode": 'mean',
         "sampling_mode": "temperature",
         "confidence": "tsallis_entropy_lin",
-        "alpha": 0.5
+        "alpha": 0.4
     },
 
     "tsallis_entropy_exp": {
@@ -222,7 +202,7 @@ sampling_configs = {
         "scoring_mode": 'mean',
         "sampling_mode": "temperature",
         "confidence": "tsallis_entropy_exp",
-        "alpha": 0.5
+        "alpha": 0.4
     },
 
     "renyi_entropy_lin": {
@@ -230,7 +210,7 @@ sampling_configs = {
         "scoring_mode": 'mean',
         "sampling_mode": "temperature",
         "confidence": "renyi_entropy_lin",
-        "alpha": 0.5
+        "alpha": 0.4
     },
 
     "renyi_entropy_exp": {
@@ -238,7 +218,7 @@ sampling_configs = {
         "scoring_mode": 'mean',
         "sampling_mode": "temperature",
         "confidence": "renyi_entropy_exp",
-        "alpha": 0.5
+        "alpha": 0.4
     },
 
     # "attention_dynamic": {
@@ -248,13 +228,13 @@ sampling_configs = {
     #     "confidence": "entropy",
     # },
 
-    # "trend_estimation": {
-    #     "method": "trend_estimation",
-    #     "estimation_method": "linear_regression",
-    #     "scoring_mode": '',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "",
-    # },
+    "trend_estimation": {
+        "method": "trend_estimation",
+        "estimation_method": "linear_regression",
+        "scoring_mode": '',
+        "sampling_mode": "temperature",
+        "confidence": "",
+    },
 
     # "attention_weighted_confidence": {
     #     "method": "attention_weighted_confidence",
@@ -263,29 +243,117 @@ sampling_configs = {
     #     "confidence": "entropy",
     # },
 
-    "cer_entropy_weighted_mean_all": {
-        "decoding_mode": 'all',
-        "method": "cer",
-        "scoring_mode": 'weighted_mean',
-        "sampling_mode": "temperature",
-        "confidence": "entropy"
-    },
+    # "cer_prob_sum_log_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "sum"
+    # },
+
+    # "cer_prob_product_log_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "product"
+    # },
+
+    # "cer_entropy_log_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy"
+    # },
+
+    # "cer_prob_product_min_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'min',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "product"
+    # },
+
+    # "cer_prob_product_max_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'max',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "product"
+    # },
+
+    # "cer_prob_product_h_mean_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'h_mean',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "product"
+    # },
+
+    # "cer_entropy_weighted_mean_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'weighted_mean',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy"
+    # },
+
+    # "cer_entropy_min_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'min',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy"
+    # },
+
+    # "cer_entropy_h_mean_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'h_mean',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy"
+    # },
+
+    # "cer_entropy_max_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'max',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy"
+    # },
+
+    # "cer_prob_product_weighted_half_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'weighted_half',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "product",
+    # },
+
+    # "cer_prob_product_weighted_2_all": {
+    #     "decoding_mode": 'all',
+    #     "method": "cer",
+    #     "scoring_mode": 'weighted_2',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "product",
+    # },
 
     "cer_prob_product_log_last": {
         "decoding_mode": 'last',
         "method": "cer",
         "scoring_mode": 'log',
         "sampling_mode": "temperature",
-        "confidence": "default",
+        "confidence": "product",
     },
 
-    # "cer_entropy_log_last": {
-    #     "decoding_mode": 'last',
-    #     "method": "cer",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy",
-    # },
+    "cer_entropy_log_last": {
+        "decoding_mode": 'last',
+        "method": "cer",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+    },
 
     "self_consistency": {
         "decoding_mode": '',
@@ -295,21 +363,21 @@ sampling_configs = {
         "confidence": "default",
     },
 
-    # "p_true": {
-    #     "decoding_mode": '',
-    #     "method": "p_true",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "default",
-    # },
+    "p_true": {
+        "decoding_mode": '',
+        "method": "p_true",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "default",
+    },
 
-    # "predictive_entropy": {
-    #     "decoding_mode": '',
-    #     "method": "pe",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "default",
-    # },
+    "predictive_entropy": {
+        "decoding_mode": '',
+        "method": "pe",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "default",
+    },
 
     "normilized_likelihood": {
         "decoding_mode": '',
@@ -319,13 +387,13 @@ sampling_configs = {
         "confidence": "default",
     },
 
-    # "likelihood": {
-    #     "decoding_mode": '',
-    #     "method": "ll",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "default",
-    # },
+    "likelihood": {
+        "decoding_mode": '',
+        "method": "ll",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "default",
+    },
 
     "normilized_entropy": {
         "decoding_mode": '',
@@ -335,13 +403,13 @@ sampling_configs = {
         "confidence": "default",
     },
 
-    # "perplexity": {
-    #     "decoding_mode": '',
-    #     "method": "ppl",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "default",
-    # },
+    "perplexity": {
+        "decoding_mode": '',
+        "method": "ppl",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "default",
+    },
 
     "topk_entropy": {
         "decoding_mode": '',
@@ -391,7 +459,7 @@ sampling_configs = {
     #     "confidence": "entropy",
     #     "compression_ratio": 0.5
     # },
-}
+})
 
 # All the methods to be evaluated
 method_groups = {
@@ -404,7 +472,7 @@ method_groups = {
 class Config:
     # Path to the HuggingFace model or local directory
     model_name: str = os.getenv(
-        "MODEL_NAME", "/data1/sunq/projects/models/meta-llama/Llama-3.1-8B-Instruct"
+        "MODEL_NAME", "/models/meta-llama/Llama-3.1-8B-Instruct"
     )
     lingua_model_name: str = os.getenv(
         "LLMLINGUA_MODEL_NAME", "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
@@ -436,7 +504,7 @@ class Config:
     aggregate: bool = True
     
     # Number of samples to process
-    number_samples: int = int(os.getenv("N_SAMPLE", 100))
+    number_samples: int = int(os.getenv("N_SAMPLE", 500))
     seed: int = int(os.getenv("SEED", 102))
 
     # Path to few-shots
@@ -445,14 +513,16 @@ class Config:
     math_shots: str = "inputs/shots/math.txt"
 
     datasets = eval(os.getenv("DATASETS", """{
-        "allenai": "allenai_math_qa_test_processed.parquet",
-        "math": "src_custom_datasets_math_dataset_test_processed.parquet",
-        "gsm8k": "openai_gsm8k_test_processed.parquet",
+        "gsm8k_hard": "gsmhardv2.jsonl",
+        "math_500": "math_500.jsonl",
+        "gsm8k": "gsm8k.jsonl",
+        "aime_2025": "aime_2025.jsonl",
+        "brumo_2025": "brumo_2025.jsonl",
     }"""))
 
     # For test
     datasets = eval(os.getenv("DATASETS", """{
-        "math": "src_custom_datasets_math_dataset_test_processed.parquet",
+        "math_500": "math_500.jsonl",
     }"""))
 
     batch_size = int(os.getenv("BATCH_SIZE", 1))
@@ -460,3 +530,5 @@ class Config:
     verbose: bool = eval(os.getenv("VERBOSE", 'False'))
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
+
+    exclude_gpus: str = "0, 1, 2, 3, 5, 6, 7"

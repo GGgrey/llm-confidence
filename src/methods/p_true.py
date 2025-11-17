@@ -4,13 +4,14 @@ import torch.nn.functional as F
 from src.utils import construct_p_true_prompt, aggregate_paths_based_on_scores
 
 
-def p_true(sample_paths, question, tokenizer, model, device, config):
+def p_true(sample_paths, tokenizer, model, device, config):
 
     method_records = []
     
     for path in sample_paths:
         final_answer = path["final_answer"]
         answer_text = path["answer_text"]
+        question = path["prompt"]
 
         p_true_message = [{"role": "user", "content": construct_p_true_prompt(question=question, answer=answer_text)}]
 

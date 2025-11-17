@@ -1,8 +1,9 @@
+import json
 import random
 import re
 import os
 from typing import List, Optional, Tuple
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,35 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from llmlingua import PromptCompressor
 from dynasor.core.evaluator import math_equal
+
+
+def get_available_gpus(exclude_list: str):
+    num_gpus = torch.cuda.device_count()
+    exclude = set([int(x) for x in exclude_list.split(",") if x.strip() != ""])
+    available = [i for i in range(num_gpus) if i not in exclude]
+    if not available:
+        raise RuntimeError("No GPUs available after applying exclusion list")
+    return available
+
+
+def load_jsonl(file):
+    with open(file, "r", encoding="utf-8") as f:
+        for line in f:
+            try:
+                yield json.loads(line)
+            except:
+                print("Error in loading: ", line)
+                exit()
+
+
+def save_jsonl(samples, save_path):
+    folder = os.path.dirname(save_path)
+    os.makedirs(folder, exist_ok=True)
+
+    with open(save_path, "w", encoding="utf-8") as f:
+        for sample in samples:
+            f.write(json.dumps(sample, ensure_ascii=False) + "\n")
+    print("Saved to", save_path)
 
 
 def seed_everything(seed=0):
@@ -34,7 +64,7 @@ def load_model_and_tokenizer(model_name, read_model_from_huggingface=True):
         local_files_only=read_model_from_huggingface,
         trust_remote_code=True,
         torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2"
+        attn_implementation="eager"
     )
     model = model.eval()
 
@@ -65,6 +95,20 @@ def load_and_sample_parquet_datasets(data_dir, dataset_files, number_samples, se
                 df = df.head(number_samples)
             loaded_datasets[filename] = df
 
+    return loaded_datasets
+
+
+def load_datasets(data_dir, dataset_files):
+
+    loaded_datasets = {}
+    for filename, file_path in dataset_files.items():
+        file_path = os.path.join(data_dir, file_path)
+        try:
+            df = pd.read_json(file_path, lines=True)  # jsonl -> DataFrame
+            loaded_datasets[filename] = df
+        except Exception as e:
+            print(f"Load {filename} failed")
+    
     return loaded_datasets
 
 

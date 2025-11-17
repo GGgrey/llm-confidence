@@ -1,12 +1,18 @@
 import gc
 from tqdm import tqdm
 from pathlib import Path
+import os
 
 import torch
 
-from src.config import Config, method_groups
-from src.utils import load_model_and_tokenizer, load_and_sample_parquet_datasets, load_lingua_model, setup_tokenizer_padding_config, \
-    batch_messages_creation, save_results_to_csv, print_final_accuracy_table, extract_answer, equal_func
+from src.config import method_groups
+from src.utils import (
+    load_model_and_tokenizer, load_and_sample_parquet_datasets, load_lingua_model,
+    setup_tokenizer_padding_config, batch_messages_creation, save_results_to_csv,
+    print_final_accuracy_table, extract_answer, equal_func, load_datasets,
+    seed_everything, get_available_gpus
+)
+from src.grader import math_equal, check_is_correct
 from src.methods.cer import cer
 from src.methods.self_consistency import self_consistency
 from src.methods.p_true import p_true
@@ -26,6 +32,85 @@ from src.methods.group_entropy import group_entropy
 from src.methods.quantile import quantile
 from src.methods.xentropy import xentropy
 # from src.methods.mars import mars
+
+
+def dispatch_method(
+    method_name,
+    method_cfg,
+    sample_paths,
+    tokenizer,
+    model,
+    lingua_model,
+    device,
+    config,
+):
+    if method_name.startswith("cer_"):
+        return cer(sample_paths, method_cfg, tokenizer, config)
+
+    elif method_name == "self_consistency":
+        return self_consistency(sample_paths)
+
+    elif method_name == "p_true":
+        return p_true(sample_paths, tokenizer, model, device, config)
+
+    elif method_name == "predictive_entropy":
+        return predictive_entropy(sample_paths, False, tokenizer, config)
+
+    elif method_name == "normilized_entropy":
+        return predictive_entropy(sample_paths, True, tokenizer, config)
+
+    elif method_name == "likelihood":
+        return likelihood(sample_paths, False, tokenizer, config)
+
+    elif method_name == "normilized_likelihood":
+        return likelihood(sample_paths, True, tokenizer, config)
+
+    elif method_name == "perplexity":
+        return perplexity(sample_paths, tokenizer, config)
+
+    elif method_name == "topk_entropy":
+        return topk_entropy(sample_paths, tokenizer, config)
+
+    elif method_name == "window_entropy":
+        return window_entropy(sample_paths, tokenizer, config)
+
+    elif method_name == "key_confidence":
+        return key_confidence(sample_paths, method_cfg, model, config)
+                
+    elif method_name == "hidden_svd":
+        return hidden_svd(sample_paths, model, config)
+
+    elif method_name == "attention_eigenvalue":
+        return attention_eigenvalue(sample_paths, method_cfg, model, tokenizer, config)
+
+    elif method_name == "compression_confidence":
+        return compression_confidence(sample_paths, method_cfg, model, lingua_model, tokenizer, device, config)
+
+    elif method_name == "attention_weighted_confidence":
+        return attention_weighted_confidence(sample_paths, tokenizer, model, config)
+
+    elif method_name == "trend_estimation":
+        return trend_estimation(sample_paths, method_cfg, tokenizer, config)
+
+    elif method_name == "attention_dynamic":
+        return attention_dynamic(sample_paths, method_cfg, model, tokenizer, config)
+
+    elif method_name == "group_entropy":
+        return group_entropy(sample_paths, method_cfg, tokenizer, config)
+
+    elif method_name.startswith("quantile_"):
+        return quantile(sample_paths, method_cfg, config)
+
+    elif method_name == "gibbs_entropy_lin" or method_name == "gibbs_entropy_exp" or \
+        method_name == "tsallis_entropy_lin" or method_name == "tsallis_entropy_exp" or \
+        method_name == "renyi_entropy_lin" or method_name == "renyi_entropy_exp":
+        return xentropy(sample_paths, method_cfg, config)
+
+    # elif method_name == "mars":  # Todo
+    #     method_output = mars(sample_paths, True, tokenizer, config)
+
+    else:
+        raise ValueError(f"Unsupported method: {method_name}")
 
 
 def handle_sampling_group(
@@ -105,88 +190,14 @@ def handle_sampling_group(
                 method_result.append(("", 0.0, ""))
                 continue
 
-            if method_name == "cer_prob_product_log_last":
-                method_output = cer(sample_paths, method_cfg, tokenizer, config)
-
-            elif method_name == "cer_entropy_log_last":
-                method_output = cer(sample_paths, method_cfg, tokenizer, config)
-
-            elif method_name == "cer_entropy_weighted_mean_all":
-                method_output = cer(sample_paths, method_cfg, tokenizer, config)
-
-            elif method_name == "self_consistency":
-                method_output = self_consistency(sample_paths)
-
-            elif method_name == "p_true":
-                method_output = p_true(sample_paths, batch_questions[i], tokenizer, model, device, config)
-
-            elif method_name == "predictive_entropy":
-                method_output = predictive_entropy(sample_paths, False, tokenizer, config)
-
-            elif method_name == "normilized_entropy":
-                method_output = predictive_entropy(sample_paths, True, tokenizer, config)
-
-            elif method_name == "likelihood":
-                method_output = likelihood(sample_paths, False, tokenizer, config)
-
-            elif method_name == "normilized_likelihood":
-                method_output = likelihood(sample_paths, True, tokenizer, config)
-
-            elif method_name == "perplexity":
-                method_output = perplexity(sample_paths, tokenizer, config)
-
-            elif method_name == "topk_entropy":
-                method_output = topk_entropy(sample_paths, tokenizer, config)
-
-            elif method_name == "window_entropy":
-                method_output = window_entropy(sample_paths, tokenizer, config)
-
-            elif method_name == "key_confidence":
-                method_output = key_confidence(sample_paths, method_cfg, model, config)
-                
-            elif method_name == "hidden_svd":
-                method_output = hidden_svd(sample_paths, model, config)
-
-            elif method_name == "attention_eigenvalue":
-                method_output = attention_eigenvalue(sample_paths, method_cfg, model, tokenizer, config)
-
-            elif method_name == "compression_confidence":
-                method_output = compression_confidence(sample_paths, method_cfg, model, lingua_model, tokenizer, device, config)
-
-            elif method_name == "attention_weighted_confidence":
-                method_output = attention_weighted_confidence(sample_paths, tokenizer, model, config)
-
-            elif method_name == "trend_estimation":
-                method_output = trend_estimation(sample_paths, method_cfg, tokenizer, config)
-
-            elif method_name == "attention_dynamic":
-                method_output = attention_dynamic(sample_paths, method_cfg, model, tokenizer, config)
-
-            elif method_name == "group_entropy":
-                method_output = group_entropy(sample_paths, method_cfg, tokenizer, config)
-
-            elif method_name == "quantile_10":
-                method_output = quantile(sample_paths, method_cfg, config)
-
-            elif method_name == "quantile_25":
-                method_output = quantile(sample_paths, method_cfg, config)
-            
-            elif method_name == "quantile_50":
-                method_output = quantile(sample_paths, method_cfg, config)
-            
-            elif method_name == "quantile_75":
-                method_output = quantile(sample_paths, method_cfg, config)
-
-            elif method_name == "quantile_90":
-                method_output = quantile(sample_paths, method_cfg, config)
-
-            elif method_name == "gibbs_entropy_lin" or method_name == "gibbs_entropy_exp" or \
-                method_name == "tsallis_entropy_lin" or method_name == "tsallis_entropy_exp" or \
-                method_name == "renyi_entropy_lin" or method_name == "renyi_entropy_exp":
-                method_output = xentropy(sample_paths, method_cfg, config)
-
-            # elif method_name == "mars":  # Todo
-            #     method_output = mars(sample_paths, True, tokenizer, config)
+            method_output = dispatch_method(
+                method_name, method_cfg,
+                sample_paths,
+                tokenizer,
+                model, lingua_model,
+                device,
+                config
+            )
 
             method_result.append(
                 (method_output[0], method_output[1], method_output[2])
@@ -294,6 +305,8 @@ def evaluate_batch_examples(
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    seed_everything(config.seed)
+
     # Configure tokenizer's padding token and padding side
     setup_tokenizer_padding_config(tokenizer, model)
 
@@ -340,9 +353,10 @@ def evaluate_batch_examples(
                     is_correct = False
 
                 try:
-                    is_correct = equal_func(answer, ground_truth)
+                    is_correct = check_is_correct(answer, ground_truth)
                 except:
-                    is_correct = str(answer) == str(ground_truth)
+                    is_correct = False
+                print(f"    Result: {'Correct' if is_correct else 'Wrong'}")
             
                 method_evaluation_result.append({
                     "method_name": method_name,
@@ -369,14 +383,11 @@ def evaluate_dataset(
 ):
     # Extract lists of questions and answers directly from the dataframe
     questions = dataset["question"].tolist()
-
-    correct_answers_list = dataset["numeric_final_answer"].astype(str).tolist()
+    answers = dataset["answer"].astype(str).tolist()
     
     total_questions = len(questions)
     description=f"{dataset_name}_{config.model_name.replace('/', '_')}"
-    correct_answers = {}
-    method_names = []
-    all_results = {}
+    correct_answers, method_names, all_results = {}, [], {}
 
     # Process the dataset in batches
     with tqdm(total=total_questions, desc=f"Processing {description}", dynamic_ncols=True) as pbar:
@@ -385,7 +396,7 @@ def evaluate_dataset(
 
             # Slice out the batch
             batch_questions = questions[start_idx:end_idx]
-            batch_correct_answers = correct_answers_list[start_idx:end_idx]
+            batch_correct_answers = answers[start_idx:end_idx]
 
             # Evaluate the batch
             batch_results = evaluate_batch_examples(
@@ -397,7 +408,7 @@ def evaluate_dataset(
                 config
             )
 
-            if config.verbose:
+            if config.verbose:  # For debug
                 print(f"\nBatch results: {batch_results}")
 
             for method_batch_results in batch_results:
@@ -437,39 +448,48 @@ def evaluate_dataset(
     }
 
     print_final_accuracy_table(method_final_accuracy)
-                    
+    
 
 def run(config):
-    """
-    Run the complete dataset evaluation pipeline based on the provided configuration.
 
-    Args:
-        config (Config): A configuration object.
-    """
-    # Print the provid    print("=" * 50)
+    print("=" * 50)
     print("Configurations:")
-    print(f"Model name: {config.model_name}")
+    print(f"Reasoning Model name: {config.model_name}")
     print(f"Lingua model name: {config.lingua_model_name}")
     print(f"Aggregate: {config.aggregate}")
-    print(f"k: {config.k}")
+    print(f"K: {config.k}")
     print(f"Number of samples: {config.number_samples}")
     print(f"Seed: {config.seed}")
     print(f"Data directory: {config.data_dir}")
     print(f"Batch size: {config.batch_size}")
     print(f"Dataset files: {config.datasets}")
+    print(f"Exclude gpus: {config.exclude_gpus}")
     print("=" * 50 + "\n")
+
+    # Load dataset for evaluation
+    # datasets = load_and_sample_parquet_datasets(
+    #     config.data_dir,
+    #     config.datasets,
+    #     number_samples=config.number_samples,
+    #     seed=config.seed
+    # )
+    datasets = load_datasets(config.data_dir, config.datasets)
+
+    # Set available GPUs
+    available_gpus = get_available_gpus(config.exclude_gpus)
+    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in available_gpus])
 
     # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(config.model_name, config.read_model_from_huggingface)
-
-    # Load dataset for evaluation
-    datasets = load_and_sample_parquet_datasets(config.data_dir, config.datasets,
-                                                number_samples=config.number_samples,
-                                                seed=config.seed)
     
     # Load lingua model for text compression
-    lingua_model = load_lingua_model(config.lingua_model_name)
-
+    lingua_model = None
+    for group_name, group_cfgs in method_groups.items():
+        if "compression_confidence" in group_cfgs:
+            print(f"Compression confidence method exists in {group_name}")
+            lingua_model = load_lingua_model(config.lingua_model_name)
+            break
+        
     # Evaluate methods on each dataset
     for dataset_name, dataset_df in datasets.items():
         print(f"\nDataset name: {dataset_name}")

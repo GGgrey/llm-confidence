@@ -60,9 +60,9 @@ def calculate_confidence_for_all_answers(logits_spans, answer_ids, token_spans, 
 def calculate_confidence_for_final_answer(
     logits,
     answer_ids,
-    confidence_method="default"
+    confidence_method="product"
 ):
-    if confidence_method == "default":
+    if confidence_method == "product":
         confidence_all = 1.0
     elif confidence_method == "sum":
         confidence_all = 0.0
@@ -82,7 +82,7 @@ def calculate_confidence_for_final_answer(
         probs = torch.softmax(token_logits, dim=-1)
         token_prob = probs[token_id]
 
-        if confidence_method == "default":
+        if confidence_method == "product":
             confidence_all *= token_prob.item()
         elif confidence_method == "sum":
             confidence_all += token_prob.item()
@@ -166,8 +166,15 @@ def handle_all_decoding(
 
     if any(v is None for v in (answer_ids, answer_text, final_answer, output_scores)):
         return confidence
-    
-    token_spans = find_all_subsequence_token_spans(answer_text, tokenizer)
+
+    token_spans = [
+        s
+        for s in find_all_subsequence_token_spans(answer_text, tokenizer)
+        if s is not None
+        and len(s) == 2
+        and None not in s
+    ]
+
     if not token_spans:
         return confidence
     
