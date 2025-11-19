@@ -17,8 +17,8 @@ def oracle_self_consistency(sample_paths):
         oracle_confidence = len(correct_paths) / len(sample_paths)
         oracle_text = oracle_path.get("answer_text", "")
     else:
-        oracle_answer = None
+        oracle_answer = ""
         oracle_confidence = 0.0
-        oracle_text = None
+        oracle_text = ""
 
     return oracle_text, oracle_confidence, oracle_answer

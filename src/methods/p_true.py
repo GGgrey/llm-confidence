@@ -45,7 +45,6 @@ def p_true(sample_paths, tokenizer, model, device, config):
             true_token_id = tokenizer.convert_tokens_to_ids("True")
             probs = F.softmax(next_token_logits, dim=-1)
             true_token_probs = probs[:, true_token_id].item()
-            # is_true_flag = (true_token_probs >= 0.5).detach()
 
             method_records.append((answer_text, true_token_probs, final_answer))
 
