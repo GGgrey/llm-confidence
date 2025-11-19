@@ -160,12 +160,12 @@ for conf, alphas in quantile_conf_alpha_map.items():
 # List of different settings to run
 sampling_configs.update({
 
-    # "mars":{  # Todo
-    #     "method": "mars",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy", 
-    # },
+    "oracle": {
+        "method": "oracle",
+        "scoring_mode": '',
+        "sampling_mode": "temperature",
+        "confidence": "",
+    },
     
     "group_entropy": {
         "method": "group_entropy",
@@ -221,13 +221,6 @@ sampling_configs.update({
         "alpha": 0.4
     },
 
-    # "attention_dynamic": {
-    #     "method": "attention_dynamic",
-    #     "scoring_mode": 'union',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy",
-    # },
-
     "trend_estimation": {
         "method": "trend_estimation",
         "estimation_method": "linear_regression",
@@ -236,108 +229,109 @@ sampling_configs.update({
         "confidence": "",
     },
 
-    # "attention_weighted_confidence": {
-    #     "method": "attention_weighted_confidence",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy",
-    # },
+    "cer_prob_sum_log_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "sum"
+    },
 
-    # "cer_prob_sum_log_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "sum"
-    # },
+    "cer_prob_product_log_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "product"
+    },
 
-    # "cer_prob_product_log_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "product"
-    # },
+    "cer_entropy_log_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy"
+    },
 
-    # "cer_entropy_log_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy"
-    # },
+    "cer_prob_product_min_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'min',
+        "sampling_mode": "temperature",
+        "confidence": "product"
+    },
 
-    # "cer_prob_product_min_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'min',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "product"
-    # },
+    "cer_prob_product_max_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'max',
+        "sampling_mode": "temperature",
+        "confidence": "product"
+    },
 
-    # "cer_prob_product_max_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'max',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "product"
-    # },
+    "cer_prob_product_h_mean_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'h_mean',
+        "sampling_mode": "temperature",
+        "confidence": "product"
+    },
 
-    # "cer_prob_product_h_mean_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'h_mean',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "product"
-    # },
+    "cer_entropy_weighted_mean_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'weighted_mean',
+        "sampling_mode": "temperature",
+        "confidence": "entropy"
+    },
 
-    # "cer_entropy_weighted_mean_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'weighted_mean',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy"
-    # },
+    "cer_entropy_min_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'min',
+        "sampling_mode": "temperature",
+        "confidence": "entropy"
+    },
 
-    # "cer_entropy_min_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'min',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy"
-    # },
+    "cer_entropy_h_mean_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'h_mean',
+        "sampling_mode": "temperature",
+        "confidence": "entropy"
+    },
 
-    # "cer_entropy_h_mean_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'h_mean',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy"
-    # },
+    "cer_entropy_max_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'max',
+        "sampling_mode": "temperature",
+        "confidence": "entropy"
+    },
 
-    # "cer_entropy_max_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'max',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy"
-    # },
+    "cer_prob_product_weighted_mean_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'weighted_mean',
+        "sampling_mode": "temperature",
+        "confidence": "product",
+    },
 
-    # "cer_prob_product_weighted_half_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'weighted_half',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "product",
-    # },
+    "cer_prob_product_weighted_half_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'weighted_half',
+        "sampling_mode": "temperature",
+        "confidence": "product",
+    },
 
-    # "cer_prob_product_weighted_2_all": {
-    #     "decoding_mode": 'all',
-    #     "method": "cer",
-    #     "scoring_mode": 'weighted_2',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "product",
-    # },
+    "cer_prob_product_weighted_2_all": {
+        "decoding_mode": 'all',
+        "method": "cer",
+        "scoring_mode": 'weighted_2',
+        "sampling_mode": "temperature",
+        "confidence": "product",
+    },
 
     "cer_prob_product_log_last": {
         "decoding_mode": 'last',
@@ -427,6 +421,20 @@ sampling_configs.update({
         "confidence": "default",
     },
 
+    # "attention_dynamic": {
+    #     "method": "attention_dynamic",
+    #     "scoring_mode": 'union',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy",
+    # },
+
+    # "attention_weighted_confidence": {
+    #     "method": "attention_weighted_confidence",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy",
+    # },
+
     # "key_confidence": {
     #     "decoding_mode": '',
     #     "method": "key_confidence",
@@ -459,6 +467,14 @@ sampling_configs.update({
     #     "confidence": "entropy",
     #     "compression_ratio": 0.5
     # },
+
+    # "mars":{  # Todo
+    #     "method": "mars",
+    #     "scoring_mode": 'log',
+    #     "sampling_mode": "temperature",
+    #     "confidence": "entropy", 
+    # },
+
 })
 
 # All the methods to be evaluated
@@ -531,4 +547,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "1, 2"
+    exclude_gpus: str = "0, 1"

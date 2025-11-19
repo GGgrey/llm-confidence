@@ -63,7 +63,7 @@ def load_model_and_tokenizer(model_name, read_model_from_huggingface=True):
         local_files_only=read_model_from_huggingface,
         trust_remote_code=True,
         torch_dtype=torch.bfloat16,
-        attn_implementation="eager"
+        attn_implementation="flash_attention_2"
     )
     model = model.eval()
 
@@ -277,7 +277,7 @@ def find_all_subsequence_token_spans(full_text, tokenizer):
     full_text_tokenized = tokenizer(full_text, add_special_tokens=False, return_offsets_mapping=True)
     offsets = full_text_tokenized['offset_mapping']
 
-    answers, spans = extract_all_boxed_answer_spans(full_text)
+    answers, spans = extract_all_numerical_values_and_spans(full_text)
     if not answers or not spans or len(answers) != len(spans):
         return token_spans
     
@@ -357,6 +357,19 @@ def extract_all_steps(text):
 
 def extract_all_numerical_values(text):
     return re.findall(r'([+-]?\d?[0-9.,/*\-+]*\d)', text)
+
+
+def extract_all_numerical_values_and_spans(text):
+    pattern = re.compile(r'([+-]?\d?[0-9.,/*\-+]*\d)')
+    
+    match = []
+    span = []
+    
+    for m in pattern.finditer(text):
+        match.append(m.group())
+        span.append((m.start(), m.end()))
+    
+    return match, span
 
 
 def aggregate_paths_based_on_scores(paths):

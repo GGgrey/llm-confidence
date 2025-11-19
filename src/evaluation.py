@@ -13,6 +13,7 @@ from src.utils import (
     seed_everything, get_available_gpus
 )
 from src.grader import math_equal, check_is_correct
+from src.methods.oracle import oracle_self_consistency
 from src.methods.cer import cer
 from src.methods.self_consistency import self_consistency
 from src.methods.p_true import p_true
@@ -44,7 +45,10 @@ def dispatch_method(
     device,
     config,
 ):
-    if method_name.startswith("cer_"):
+    if method_name == "oracle":
+        return oracle_self_consistency(sample_paths)
+
+    elif method_name.startswith("cer_"):
         return cer(sample_paths, method_cfg, tokenizer, config)
 
     elif method_name == "self_consistency":
@@ -118,6 +122,7 @@ def handle_sampling_group(
     tokenizer,
     lingua_model,
     batch_questions,
+    batch_correct_answers,
     tokenized_batch,
     config,
     group_cfgs,
@@ -163,6 +168,7 @@ def handle_sampling_group(
 
             paths[i].append({
                 "prompt": batch_questions[i],
+                "ground_truth": batch_correct_answers[i],
                 "final_answer": final_answer,
                 "generated_ids": generated_ids,
                 "prompt_len": prompt_len,
@@ -326,7 +332,7 @@ def evaluate_batch_examples(
         if group_name == "greedy":
             group_results = handle_greedy_group(model, tokenizer, batch_questions, tokenized_batch, config, group_cfgs, device)
         elif group_name == "sampling":
-            group_results = handle_sampling_group(model, tokenizer, lingua_model, batch_questions, tokenized_batch, config, group_cfgs, device)
+            group_results = handle_sampling_group(model, tokenizer, lingua_model, batch_questions, batch_correct_answers, tokenized_batch, config, group_cfgs, device)
         
         all_results.append(group_results)
 
