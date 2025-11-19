@@ -12,8 +12,8 @@ from sklearn.linear_model import TheilSenRegressor
 import numpy as np
 
 from src.config import Config
-from src.utils import load_model_and_tokenizer, setup_tokenizer_padding_config, construct_prompt, \
-extract_answer, equal_func
+from src.utils import load_model_and_tokenizer, setup_tokenizer_padding_config, construct_prompt, extract_answer
+from src.grader import math_equal, check_is_correct
 
 
 def load_dataset(file_path):
@@ -162,7 +162,7 @@ with tqdm(total=total_questions, desc=f"Processing math dataset", dynamic_ncols=
                 continue
 
             try:
-                is_correct = equal_func(final_answer, ground_truth)
+                is_correct = check_is_correct(final_answer, ground_truth)
             except:
                 is_correct = str(final_answer) == str(ground_truth)
 

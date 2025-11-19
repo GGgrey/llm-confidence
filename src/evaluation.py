@@ -9,7 +9,7 @@ from src.config import method_groups
 from src.utils import (
     load_model_and_tokenizer, load_and_sample_parquet_datasets, load_lingua_model,
     setup_tokenizer_padding_config, batch_messages_creation, save_results_to_csv,
-    print_final_accuracy_table, extract_answer, equal_func, load_datasets,
+    print_final_accuracy_table, extract_answer, load_datasets,
     seed_everything, get_available_gpus
 )
 from src.grader import math_equal, check_is_correct

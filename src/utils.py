@@ -10,7 +10,6 @@ import pandas as pd
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from llmlingua import PromptCompressor
-from dynasor.core.evaluator import math_equal
 
 
 def get_available_gpus(exclude_list: str):
@@ -168,8 +167,7 @@ def batch_messages_creation(tokenizer, batch_questions, device, use_base_prompt)
                 add_generation_prompt=True
             )
         else:
-            input_text = "\n".join(
-                [f"{msg['role']}: {msg['content']}" for msg in message])
+            input_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in message])
             input_text += "\nassistant:"
         
         batch_template_messages.append(input_text)
@@ -249,30 +247,6 @@ def extract_all_boxed_answer_spans(text: str) -> Tuple[List[str], List[Tuple[int
         else:
             i += 1
     return answers, spans
-
-
-def quick_parse(text: str) -> str:
-    if '\\text{' in text and '}' in text:
-        # Find all occurrences of \text{...} and remove them
-        while '\\text{' in text:
-            start = text.find('\\text{')
-            if start == -1:
-                break
-            end = text.find('}', start)
-            if end == -1:
-                break
-            # Replace \text{content} with just content
-            content = text[start + 6:end]  # 6 is length of '\text{'
-            text = text[:start] + content + text[end + 1:]
-    return text
-
-
-def equal_func(answer: str, ground_truth: str) -> bool:
-    answer = quick_parse(answer)
-    if len(answer) == 1 and answer.isalpha() and len(ground_truth) == 1 and ground_truth.isalpha():
-        return answer.lower() == ground_truth.lower()
-    else:
-        return math_equal(answer, ground_truth)
 
 
 def find_last_subsequence_token_spans(full_text, sub_text, tokenizer):

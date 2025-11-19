@@ -14,8 +14,8 @@ import numpy as np
 import seaborn as sns
 
 from src.config import Config
-from src.utils import load_model_and_tokenizer, setup_tokenizer_padding_config, construct_prompt, \
-extract_answer, equal_func
+from src.utils import load_model_and_tokenizer, setup_tokenizer_padding_config, construct_prompt, extract_answer
+from src.grader import math_equal, check_is_correct
 
 
 def load_dataset(file_path):
@@ -109,7 +109,7 @@ with tqdm(total=total_questions, desc=f"Processing math dataset", dynamic_ncols=
 
             batch_output = model.generate(
                 **tokenized_input,
-                max_new_tokens=120,
+                max_new_tokens=1024,
                 num_beams=config.num_beams,
                 temperature=0.7,
                 do_sample=True,
@@ -135,7 +135,7 @@ with tqdm(total=total_questions, desc=f"Processing math dataset", dynamic_ncols=
                 continue
 
             try:
-                is_correct = equal_func(final_answer, ground_truth)
+                is_correct = check_is_correct(final_answer, ground_truth)
             except:
                 is_correct = str(final_answer) == str(ground_truth)
 

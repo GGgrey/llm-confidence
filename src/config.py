@@ -472,7 +472,7 @@ method_groups = {
 class Config:
     # Path to the HuggingFace model or local directory
     model_name: str = os.getenv(
-        "MODEL_NAME", "/models/meta-llama/Llama-3.1-8B-Instruct"
+        "MODEL_NAME", "/root/siton-data-0072803f053947c8bb3fe64d115b30e3/models/Qwen2.5-7B-Instruct"
     )
     lingua_model_name: str = os.getenv(
         "LLMLINGUA_MODEL_NAME", "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
@@ -531,4 +531,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 1, 2, 3, 5, 6, 7"
+    exclude_gpus: str = "1, 2"

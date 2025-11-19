@@ -10,10 +10,11 @@ import torch.nn.functional as F
 import numpy as np
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from dynasor.core.evaluator import math_equal
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from scipy.stats import ks_2samp
+
+from src.grader import math_equal, check_is_correct
 
 
 def get_available_gpus(exclude_list: str):
@@ -128,30 +129,6 @@ def compute_entropy_trend_confidence(output_scores, answer_ids, tokenizer):
     return slope
 
 
-def quick_parse(text: str) -> str:
-    if '\\text{' in text and '}' in text:
-        # Find all occurrences of \text{...} and remove them
-        while '\\text{' in text:
-            start = text.find('\\text{')
-            if start == -1:
-                break
-            end = text.find('}', start)
-            if end == -1:
-                break
-            # Replace \text{content} with just content
-            content = text[start + 6:end]  # 6 is length of '\text{'
-            text = text[:start] + content + text[end + 1:]
-    return text
-
-
-def equal_func(answer: str, ground_truth: str) -> bool:
-    answer = quick_parse(answer)
-    if len(answer) == 1 and answer.isalpha() and len(ground_truth) == 1 and ground_truth.isalpha():
-        return answer.lower() == ground_truth.lower()
-    else:
-        return math_equal(answer, ground_truth)
-
-
 def run_inference(
     model_name,
     prompt_chunk,
@@ -222,7 +199,7 @@ def run_inference(
 
         is_valid = final_answer is not None
         try:
-            is_correct = equal_func(final_answer, ground_truth)
+            is_correct = check_is_correct(final_answer, ground_truth)
         except:
             is_correct = str(final_answer) == str(ground_truth)
 
