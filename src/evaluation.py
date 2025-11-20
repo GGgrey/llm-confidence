@@ -348,9 +348,11 @@ def evaluate_batch_examples(
 
             for batch_idx, (text, score, answer) in enumerate(method_result["results"], start=1):
                 print(f"  Batch {batch_idx}:")
-                print(f"    Text: {text[:80]}...")
+                print(f"    Question: {batch_questions[batch_idx - 1]}")
+                print(f"    Answer text: {text[:160]}...")
+                print(f"    Answer length: {len(text)}")
                 print(f"    Score: {score}")
-                print(f"    Answer: {answer}")
+                print(f"    Final answer: {answer}")
 
                 ground_truth = batch_correct_answers[batch_idx - 1]
                 print(f"    Ground truth: {ground_truth}")
