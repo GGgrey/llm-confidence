@@ -63,7 +63,7 @@ def load_model_and_tokenizer(model_name, read_model_from_huggingface=True):
         local_files_only=read_model_from_huggingface,
         trust_remote_code=True,
         torch_dtype=torch.bfloat16,
-        attn_implementation="eager"
+        # attn_implementation="flash_attention_2"
     )
     model = model.eval()
 
