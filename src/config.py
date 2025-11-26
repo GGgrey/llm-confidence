@@ -432,39 +432,12 @@ sampling_configs.update({
     },
 
     "heterogeneous_ensemble_rrf": {
-        "decoding_mode": '',
         "method": "stability_aware_entropy",
-        "scoring_mode": 'log',
         "sampling_mode": "temperature",
-        "confidence": "entropy",
         "rank_mode": "rrf",
-        "rrf_k": 20,
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "min_prob", "quantile_logit_0", "quantile_logit_5", "quantile_logit_10", "quantile_logit_15", "quantile_logit_20", "quantile_logit_25", "quantile_logit_30", "quantile_logit_35", "quantile_logit_40", "quantile_logit_45", "quantile_logit_50", "quantile_logit_55", "quantile_logit_60", "quantile_logit_65", "quantile_logit_70", "quantile_logit_75", "quantile_logit_80", "quantile_logit_85", "quantile_logit_90", "quantile_logit_95", "quantile_logit_100"],
+        "rrf_k": 10,
         "weighting_mode": "std_inverse",
-        "rsf_weights": None
-    },
-
-    "heterogeneous_ensemble_erf": {
-        "decoding_mode": '',
-        "method": "stability_aware_entropy",
-        "scoring_mode": 'log',
-        "sampling_mode": "temperature",
-        "confidence": "entropy",
-        "rank_mode": "erf",
-        "rrf_k": 20,
-        "weighting_mode": "std_inverse",
-        "rsf_weights": None
-    },
-
-    "heterogeneous_ensemble_rsf": {
-        "decoding_mode": '',
-        "method": "stability_aware_entropy",
-        "scoring_mode": 'log',
-        "sampling_mode": "temperature",
-        "confidence": "entropy",
-        "rank_mode": "rsf",
-        "rrf_k": 20,
-        "weighting_mode": "std_inverse",
-        "rsf_weights": None
     },
 
     "semantic_consistency": {
@@ -568,7 +541,7 @@ class Config:
     
     # Number of samples to process
     number_samples: int = int(os.getenv("N_SAMPLE", 500))
-    seed: int = int(os.getenv("SEED", 102))
+    seed: int = int(os.getenv("SEED", 104))
 
     # Path to few-shots
     gsm8k_shots: str = "inputs/shots/gsm8k.txt"

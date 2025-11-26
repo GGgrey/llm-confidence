@@ -1,9 +1,113 @@
+from abc import ABC, abstractmethod
+from typing import List, Dict, Any, Tuple, Type, Optional
+
 import torch
 import torch.nn.functional as F
+
 from src.utils import aggregate_paths_based_on_scores
 
 
-def compute_ranks_1based(values, smaller_value_is_better=True):
+class BaseMetric(ABC):
+    def __init__(self, name: str, lower_is_better: bool):
+        self.name = name
+        self.lower_is_better = lower_is_better
+
+    @abstractmethod
+    def compute(self, context: Dict[str, Any]) -> float:
+        pass
+
+
+class MeanEntropyMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("mean_entropy", lower_is_better=True)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        return context["entropy"].mean().item()
+    
+
+class MeanLogProbMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("mean_logprob", lower_is_better=False)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        return context["logprobs"].mean().item()
+    
+
+class MinProbMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("min_prob", lower_is_better=False)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        return context["probs"].min().item()
+    
+
+class PerplexityMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("ppl", lower_is_better=True)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        mean_lp = context["logprobs"].mean()
+        return torch.exp(-mean_lp).item()
+    
+
+class MeanLogitMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("mean_logit", lower_is_better=False)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        return context["logits"].mean().item()
+    
+
+class QuantileLogitMetric(BaseMetric):
+    def __init__(self, name: str, alpha: float):
+        super().__init__(name, lower_is_better=False)
+        self.alpha = alpha
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        s_quant = torch.quantile(context["logits"], self.alpha).item()
+        return s_quant
+    
+
+METRIC_REGISTRY: Dict[str, Type[BaseMetric]] = {
+    "mean_entropy": MeanEntropyMetric,
+    "mean_logprob": MeanLogProbMetric,
+    "min_prob": MinProbMetric,
+    "ppl": PerplexityMetric,
+    "mean_logit": MeanLogitMetric,
+}
+
+
+def get_metrics_from_config(method_cfg: Dict) -> List[BaseMetric]:
+    metric_names = method_cfg.get("ensemble_metrics")
+    if not metric_names:
+        metric_names = ["mean_entropy", "mean_logprob", "min_prob"]
+    
+    active_metrics = []
+    for name in metric_names:
+        if name.startswith("quantile_logit_"):
+            try:
+                suffix = name.split("_")[-1]
+                val = float(suffix)
+                alpha = val / 100.0
+                alpha = max(0.0, min(1.0, alpha))
+                active_metrics.append(QuantileLogitMetric(name=name, alpha=alpha))
+            except ValueError:
+                raise ValueError(f"Invalid quantile metric format: {name}")
+        elif name in METRIC_REGISTRY:
+            active_metrics.append(METRIC_REGISTRY[name]())
+        else:
+            raise ValueError(
+                f"Metric '{name}' not found. "
+                f"Available: {list(METRIC_REGISTRY.keys())}"
+            )
+
+    return active_metrics
+
+
+def compute_ranks(
+    values: List[Any],
+    smaller_value_is_better: bool = True
+) -> List[int]:
     indexed_data = list(enumerate(values))
     reverse_sort = not smaller_value_is_better
     indexed_data.sort(key=lambda x: x[1], reverse=reverse_sort)
@@ -14,183 +118,126 @@ def compute_ranks_1based(values, smaller_value_is_better=True):
     return ranks
     
 
-def robust_z_score_normalization(values, smaller_is_better=True, eps=1e-8):
-
-    if len(values) == 0:
-        return []
+@torch.no_grad()
+def collect_metrics_data(
+    sample_paths: List[Dict], 
+    tokenizer, 
+    active_metrics: List[BaseMetric]
+) -> Tuple[Dict[str, List[Any]], List[Dict]]:
     
-    tensor_vals = torch.tensor(values, dtype=torch.float32)
-    
-    if len(values) == 1:
-        return [0.0]
-
-    median = torch.median(tensor_vals)
-    
-    abs_diff = torch.abs(tensor_vals - median)
-    mad = torch.median(abs_diff)
-    
-    scale = mad * 1.4826
-    
-    if scale < eps:
-        scale = torch.std(tensor_vals) + eps
-    
-    z_scores = (tensor_vals - median) / scale
-    
-    if smaller_is_better:
-        z_scores = -z_scores
-        
-    return z_scores.tolist()
-    
-
-def collect_raw_metrics(sample_paths, tokenizer):
-    raw_metrics_entropy = []
-    raw_metrics_likelihood = []
-    raw_metrics_minprob = []
-    method_records_meta = []
+    metrics_results = {m.name: [] for m in active_metrics}
+    method_records = []
 
     for path in sample_paths:
-        answer_ids = path["answer_ids"]
-        output_scores = path["output_scores"]
+        answer_ids = path["answer_ids"]        # shape: [seq_len]
+        output_scores = path["output_scores"]  # shape: [seq_len, vocab_size]
 
-        if output_scores.device.type != 'cpu':
-            output_scores = output_scores.cpu()
-        if answer_ids.device.type != 'cpu':
-            answer_ids = answer_ids.cpu()
+        # Calculate logprobs and probs
+        log_probs_all = F.log_softmax(output_scores, dim=-1, dtype=torch.float64)
+        probs_all = F.softmax(output_scores, dim=-1, dtype=torch.float64)
+        
+        token_idx = answer_ids.unsqueeze(-1)
+        token_log_probs = log_probs_all.gather(dim=-1, index=token_idx).squeeze(-1)
+        token_probs = probs_all.gather(dim=-1, index=token_idx).squeeze(-1)
+        token_logits = output_scores.gather(dim=-1, index=token_idx).squeeze(-1)
 
-        probs = F.softmax(output_scores, dim=-1)
-        log_probs = F.log_softmax(output_scores, dim=-1)
-
-        token_probs = probs.gather(dim=-1, index=answer_ids.unsqueeze(-1)).squeeze(-1)
-        token_log_probs = log_probs.gather(dim=-1, index=answer_ids.unsqueeze(-1)).squeeze(-1)
-        entropy_seq = -torch.sum(probs * torch.log(probs + 1e-9), dim=-1)
+        # Calculate entropy
+        entropy_seq = -torch.sum(probs_all * torch.log(probs_all + 1e-9), dim=-1, dtype=torch.float64)
 
         if tokenizer.pad_token_id is not None:
             mask = answer_ids != tokenizer.pad_token_id
-            valid_entropy = entropy_seq[mask]
-            valid_logprobs = token_log_probs[mask]
-            valid_probs = token_probs[mask]
-        else:
-            valid_entropy = entropy_seq
-            valid_logprobs = token_log_probs
-            valid_probs = token_probs
+            entropy_seq = entropy_seq[mask]
+            token_log_probs = token_log_probs[mask]
+            token_probs = token_probs[mask]
+            token_logits = token_logits[mask]
+        context = {
+            "entropy": entropy_seq,
+            "logprobs": token_log_probs,
+            "probs": token_probs,
+            "logits": token_logits,
+            "raw_output_scores": output_scores,
+            "raw_answer_ids": answer_ids
+        }
 
-        length = valid_entropy.size(0)
-        if length == 0:
-            raw_metrics_entropy.append(1e5)
-            raw_metrics_likelihood.append(-1e5)
-            raw_metrics_minprob.append(0.0)
-        else:
-            raw_metrics_entropy.append(valid_entropy.mean().item())
-            raw_metrics_likelihood.append(valid_logprobs.mean().item())
-            raw_metrics_minprob.append(valid_probs.min().item())
-
-        method_records_meta.append(path)
-
-    metrics = {
-        "mean_entropy": raw_metrics_entropy,
-        "mean_logprob": raw_metrics_likelihood,
-        "min_prob": raw_metrics_minprob
-    }
-    return metrics, method_records_meta
-
-
-def ensemble_rrf(metrics, meta, rrf_k=20):
-    ranks_e = compute_ranks_1based(metrics["mean_entropy"], smaller_value_is_better=True)
-    ranks_l = compute_ranks_1based(metrics["mean_logprob"], smaller_value_is_better=False)
-    ranks_m = compute_ranks_1based(metrics["min_prob"], smaller_value_is_better=False)
-
-    records = []
-    for i in range(len(meta)):
-        rrf_score = (1.0 / (rrf_k + ranks_e[i])) + \
-                    (1.0 / (rrf_k + ranks_l[i])) + \
-                    (1.0 / (rrf_k + ranks_m[i]))
-        records.append((meta[i]["answer_text"], rrf_score, meta[i]["final_answer"]))
-    return records
-
-
-def ensemble_erf(metrics, meta, weight_by="std_inverse"):
-    metric_names = ["mean_entropy", "mean_logprob", "min_prob"]
-    ranks = {}
-    ranks["mean_entropy"] = compute_ranks_1based(metrics["mean_entropy"], True)
-    ranks["mean_logprob"] = compute_ranks_1based(metrics["mean_logprob"], False)
-    ranks["min_prob"] = compute_ranks_1based(metrics["min_prob"], False)
-
-    weights = {}
-    if weight_by == "equal":
-        for m in metric_names: weights[m] = 1.0
-    else:
-        eps = 1e-8
-        stds = {}
-        for m in metric_names:
-            vals = torch.tensor(metrics[m], dtype=torch.float32)
-            if vals.numel() <= 1:
-                stds[m] = 0.0
-            else:
-                stds[m] = vals.std(unbiased=True).item()
+        for metric in active_metrics:
+            try:
+                val = metric.compute(context)
+            except Exception as e:
+                raise RuntimeError(f"Metric {metric.name} computation failed: {e}")
+            metrics_results[metric.name].append(val)
         
-        invs = {}
-        for m in metric_names:
-            val = stds[m]
-            invs[m] = 1.0 / (val + eps) 
-        
-        total_w = sum(invs.values()) + eps
-        for m in metric_names:
-            weights[m] = invs[m] / total_w
+        method_records.append(path)
+    
+    return metrics_results, method_records
+
+
+def ensemble_rrf(
+    metrics_data: Dict[str, List[float]], 
+    paths: List[Dict], 
+    active_metrics: List[BaseMetric],
+    rrf_k: int = 20
+):
+    num_samples = len(paths)
+    all_ranks = {}
+    for metric in active_metrics:
+        raw_values = metrics_data[metric.name]
+        all_ranks[metric.name] = compute_ranks(
+            raw_values, 
+            smaller_value_is_better=metric.lower_is_better
+        )
     
     records = []
-    for i in range(len(meta)):
-        rank_weighted_sum = 0.0
-        for m in metric_names:
-            rank_weighted_sum += weights[m] * ranks[m][i]
-
-        score = -rank_weighted_sum
-        records.append((meta[i]["answer_text"], score, meta[i]["final_answer"]))
+    for i in range(num_samples):
+        rrf_score = 0.0
+        for metric in active_metrics:
+            rank_i = all_ranks[metric.name][i]
+            rrf_score += 1.0 / (rrf_k + rank_i)
+        
+        records.append((
+            paths[i].get("answer_text", ""), 
+            rrf_score, 
+            paths[i].get("final_answer")
+        ))
+    
     return records
 
 
-def ensemble_rsf(metrics, meta, custom_weights=None):
-    if custom_weights is None:
-        weights = {'mean_entropy': 0.2, 'mean_logprob': 0.6, 'min_prob': 0.2}
-    else:
-        weights = custom_weights
-
-    z_e = robust_z_score_normalization(metrics["mean_entropy"], smaller_is_better=True)
-    z_l = robust_z_score_normalization(metrics["mean_logprob"], smaller_is_better=False)
-    z_m = robust_z_score_normalization(metrics["min_prob"], smaller_is_better=False)
-
-    records = []
-    for i in range(len(meta)):
-        composite_score = (weights['mean_entropy'] * z_e[i]) + \
-                          (weights['mean_logprob'] * z_l[i]) + \
-                          (weights['min_prob'] * z_m[i])
-        records.append((meta[i]["answer_text"], composite_score, meta[i]["final_answer"]))
-    return records
-
-
-def heterogeneous_ensemble(sample_paths, method_cfg, tokenizer, config, mode="rsf", rrf_k=20, weighting_mode="std_inverse", rsf_weights=None):
-
-    raw_metrics, method_records_meta = collect_raw_metrics(sample_paths, tokenizer)
-    if not method_records_meta:
+def heterogeneous_ensemble(
+    sample_paths,
+    method_cfg,
+    tokenizer,
+    config,
+    mode="rsf",
+    rrf_k=20,
+    weighting_mode="std_inverse"
+):
+    if not sample_paths:
+        raise ValueError("Sample paths list is empty")
+    
+    active_metrics = get_metrics_from_config(method_cfg)
+    
+    raw_metrics_data, method_records = collect_metrics_data(
+        sample_paths, tokenizer, active_metrics
+    )
+    if not method_records:
         raise ValueError("No valid sample paths provided to heterogeneous ensemble")
     
     mode = method_cfg.get("rank_mode", mode)
+    rrf_k = method_cfg.get("rrf_k", rrf_k)
 
     if mode == "rrf":
-        rrf_k = method_cfg.get("rrf_k", rrf_k)
-        records = ensemble_rrf(raw_metrics, method_records_meta, rrf_k)
-    elif mode == "erf":
-        weighting_mode = method_cfg.get("weighting_mode", weighting_mode)
-        records = ensemble_erf(raw_metrics, method_records_meta, weight_by=weighting_mode)
-    elif mode == "rsf":
-        rsf_weights = method_cfg.get("rsf_weights", rsf_weights)
-        records = ensemble_rsf(raw_metrics, method_records_meta, custom_weights=rsf_weights)
+        records = ensemble_rrf(
+            raw_metrics_data, method_records, active_metrics, rrf_k=rrf_k
+        )
+    elif mode == "xxx":  # Todo
+        pass
     else:
         raise ValueError(f"Unknown heterogeneous ensemble mode: {mode}")
     
     if not records:
-        raise RuntimeError(f"heterogeneous ensemble (mode={mode}) produced no records")
+        raise RuntimeError(f"Heterogeneous ensemble (mode={mode}) produced no records")
     
-    if config.aggregate:
+    if hasattr(config, 'aggregate') and config.aggregate:
         return aggregate_paths_based_on_scores(records)
     else:
         return max(records, key=lambda x: x[1])
