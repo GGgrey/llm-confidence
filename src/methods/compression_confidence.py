@@ -64,6 +64,16 @@ def compression_confidence(sample_paths, method_cfg, model, lingua_model, tokeni
         final_answer = path["final_answer"]
         answer_text = path["answer_text"]
         prompt_len = path["prompt_len"]
+        answer_ids = path["answer_ids"]
+
+        if tokenizer.pad_token_id is not None:
+            mask = generated_ids != tokenizer.pad_token_id
+            generated_ids = generated_ids[mask]
+
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+
+            prompt_len = len(generated_ids) - len(answer_ids)
 
         compressed_output = lingua_model.compress_prompt(answer_text, rate=compression_ratio, force_reserve_digit=True, drop_consecutive=True)
         compressed_answer_text = compressed_output['compressed_prompt']

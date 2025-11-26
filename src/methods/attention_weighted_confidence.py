@@ -87,6 +87,16 @@ def attention_weighted_confidence(sample_paths, tokenizer, model, config):
         output_scores = path["output_scores"]
         prompt_len = path["prompt_len"]
 
+        if tokenizer.pad_token_id is not None:
+            mask = generated_ids != tokenizer.pad_token_id
+            generated_ids = generated_ids[mask]
+
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+            output_scores = output_scores[mask]
+
+            prompt_len = len(generated_ids) - len(answer_ids)
+
         final_answer_ori = extract_last_numerical_value(answer_text)
 
         final_answer_token_start_idx, final_answer_token_end_idx = find_last_subsequence_token_spans(

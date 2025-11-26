@@ -4,7 +4,7 @@ import torch
 from src.utils import aggregate_paths_based_on_scores
 
 
-def quantile(sample_paths, method_cfg, config):
+def quantile(sample_paths, method_cfg, tokenizer, config):
     
     method_records = []
     alpha = method_cfg["alpha"]
@@ -20,16 +20,25 @@ def quantile(sample_paths, method_cfg, config):
 
         if confidence_method == "prob":
             token_probs = probs.gather(dim=-1, index=answer_ids.unsqueeze(-1)).squeeze(-1)
+            if tokenizer.pad_token_id is not None:
+                mask = answer_ids != tokenizer.pad_token_id
+                token_probs = token_probs[mask]
             s_quant = torch.quantile(token_probs, alpha).item()
         elif confidence_method == "entropy":
             eps = 1e-12
             token_entropy = -(probs * torch.log(probs + eps)).sum(dim=-1)
+            if tokenizer.pad_token_id is not None:
+                mask = answer_ids != tokenizer.pad_token_id
+                token_entropy = token_entropy[mask]
             max_entropy = torch.log(torch.tensor(probs.size(-1), dtype=torch.float))
             token_certainty = max_entropy - token_entropy
             norm_certainty = token_certainty / max_entropy
             s_quant = torch.quantile(norm_certainty, alpha).item()
         elif confidence_method == "logit":
             token_logits = output_scores.gather(dim=-1, index=answer_ids.unsqueeze(-1)).squeeze(-1)
+            if tokenizer.pad_token_id is not None:
+                mask = answer_ids != tokenizer.pad_token_id
+                token_logits = token_logits[mask]
             s_quant = torch.quantile(token_logits, alpha).item()
         else:
             raise ValueError(f"Unsupported confidence calculation mode: {confidence_method}")

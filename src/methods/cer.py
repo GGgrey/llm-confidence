@@ -242,6 +242,11 @@ def cer(sample_paths, method_cfg, tokenizer, config):
         answer_text = path["answer_text"]
         output_scores = path["output_scores"]
 
+        if tokenizer.pad_token_id is not None:
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+            output_scores = output_scores[mask]
+
         if decoding_mode == "last":
             confidence = handle_last_decoding(tokenizer, answer_text, final_answer, 
                                               output_scores, answer_ids,

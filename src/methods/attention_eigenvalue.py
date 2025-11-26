@@ -111,6 +111,16 @@ def attention_eigenvalue(sample_paths, method_cfg, model, tokenizer, config):
         output_scores = path["output_scores"]
         prompt_len = path["prompt_len"]
 
+        if tokenizer.pad_token_id is not None:
+            mask = generated_ids != tokenizer.pad_token_id
+            generated_ids = generated_ids[mask]
+
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+            output_scores = output_scores[mask]
+
+            prompt_len = len(generated_ids) - len(answer_ids)
+
         attn_weights = get_attn_weights(generated_ids, model)
         attn_weights = [x[0].to(torch.float32).detach().cpu() for x in attn_weights]
 

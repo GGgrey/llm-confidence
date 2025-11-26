@@ -133,7 +133,7 @@ def compute_key_confidence(answer_ids, prompt_len, attn_weights, output_scores, 
     return confidence
 
 
-def key_confidence(sample_paths, method_cfg, model, config):
+def key_confidence(sample_paths, method_cfg, model, tokenizer, config):
     
     method_records = []
     confidence_method = method_cfg["confidence"]
@@ -145,6 +145,16 @@ def key_confidence(sample_paths, method_cfg, model, config):
         answer_text = path["answer_text"]
         output_scores = path["output_scores"]
         prompt_len = path["prompt_len"]
+
+        if tokenizer.pad_token_id is not None:
+            mask = generated_ids != tokenizer.pad_token_id
+            generated_ids = generated_ids[mask]
+
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+            output_scores = output_scores[mask]
+
+            prompt_len = len(generated_ids) - len(answer_ids)
 
         attn_weights = get_attn_weights(generated_ids, model)
 

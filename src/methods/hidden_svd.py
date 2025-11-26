@@ -56,7 +56,7 @@ def compute_hidden_svd(hidden_states, prompt_len, generated_len):
     return np.mean(scores).item()
 
 
-def hidden_svd(sample_paths, model, config):
+def hidden_svd(sample_paths, model, tokenizer, config):
     
     method_records = []
 
@@ -65,6 +65,16 @@ def hidden_svd(sample_paths, model, config):
         final_answer = path["final_answer"]
         answer_text = path["answer_text"]
         prompt_len = path["prompt_len"]
+        answer_ids = path["answer_ids"]
+
+        if tokenizer.pad_token_id is not None:
+            mask = generated_ids != tokenizer.pad_token_id
+            generated_ids = generated_ids[mask]
+
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+
+            prompt_len = len(generated_ids) - len(answer_ids)
 
         hidden_states = get_hidden_states(generated_ids, model)
         hidden_states = [x[0].to(torch.float32).detach().cpu() for x in hidden_states]

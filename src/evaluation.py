@@ -81,10 +81,10 @@ def dispatch_method(
         return window_entropy(sample_paths, tokenizer, config)
 
     elif method_name == "key_confidence":
-        return key_confidence(sample_paths, method_cfg, model, config)
+        return key_confidence(sample_paths, method_cfg, model, tokenizer, config)
                 
     elif method_name == "hidden_svd":
-        return hidden_svd(sample_paths, model, config)
+        return hidden_svd(sample_paths, model, tokenizer, config)
 
     elif method_name == "attention_eigenvalue":
         return attention_eigenvalue(sample_paths, method_cfg, model, tokenizer, config)
@@ -105,12 +105,12 @@ def dispatch_method(
         return group_entropy(sample_paths, method_cfg, tokenizer, config)
 
     elif method_name.startswith("quantile_"):
-        return quantile(sample_paths, method_cfg, config)
+        return quantile(sample_paths, method_cfg, tokenizer, config)
 
     elif method_name == "gibbs_entropy_lin" or method_name == "gibbs_entropy_exp" or \
         method_name == "tsallis_entropy_lin" or method_name == "tsallis_entropy_exp" or \
         method_name == "renyi_entropy_lin" or method_name == "renyi_entropy_exp":
-        return xentropy(sample_paths, method_cfg, config)
+        return xentropy(sample_paths, method_cfg, tokenizer, config)
     
     elif method_name == "stability_aware_entropy":
         return stability_aware_entropy(sample_paths, method_cfg, tokenizer, config)

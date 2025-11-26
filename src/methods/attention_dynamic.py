@@ -34,6 +34,17 @@ def attention_dynamic(sample_paths, method_cfg, model, tokenizer, config):
         answer_text = path["answer_text"]
         output_scores = path["output_scores"]
         prompt_len = path["prompt_len"]
+        answer_ids = path["answer_ids"]
+
+        if tokenizer.pad_token_id is not None:
+            mask = generated_ids != tokenizer.pad_token_id
+            generated_ids = generated_ids[mask]
+
+            mask = answer_ids != tokenizer.pad_token_id
+            answer_ids = answer_ids[mask]
+            output_scores = output_scores[mask]
+
+            prompt_len = len(generated_ids) - len(answer_ids)
 
         # Get attention weights
         attn_weights = get_attn_weights(generated_ids, model)

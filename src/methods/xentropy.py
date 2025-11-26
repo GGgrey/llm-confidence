@@ -93,7 +93,7 @@ def renyi_entropy_exp(probs, vocab_size, alpha):
     return (V * (sum_p_alpha ** (1 / (alpha - 1))) - 1) / (V - 1)
 
 
-def xentropy(sample_paths, method_cfg, config):
+def xentropy(sample_paths, method_cfg, tokenizer, config):
     
     method_records = []
     scoring_mode = method_cfg["scoring_mode"]
@@ -104,9 +104,14 @@ def xentropy(sample_paths, method_cfg, config):
         final_answer = path["final_answer"]
         answer_text = path["answer_text"]
         output_scores = path["output_scores"]
+        answer_ids = path["answer_ids"]
 
         probs = F.softmax(output_scores, dim=-1)
         vocab_size = probs.size(-1)
+
+        if tokenizer.pad_token_id is not None:
+            mask = answer_ids != tokenizer.pad_token_id
+            probs = probs[mask]
 
         if confidence_method == "gibbs_entropy_lin":
             entropy = gibbs_entropy_lin(probs, vocab_size, alpha)
