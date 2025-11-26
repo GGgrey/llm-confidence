@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import os
-from itertools import product
 
 from dotenv import load_dotenv
 
@@ -373,7 +372,7 @@ sampling_configs.update({
         "confidence": "default",
     },
 
-    "normilized_likelihood": {
+    "normalized_likelihood": {
         "decoding_mode": '',
         "method": "nl",
         "scoring_mode": 'log',
@@ -389,7 +388,7 @@ sampling_configs.update({
         "confidence": "default",
     },
 
-    "normilized_entropy": {
+    "normalized_entropy": {
         "decoding_mode": '',
         "method": "ne",
         "scoring_mode": 'log',
@@ -419,6 +418,61 @@ sampling_configs.update({
         "scoring_mode": 'log',
         "sampling_mode": "temperature",
         "confidence": "default",
+    },
+
+    "stability_aware_entropy": {
+        "decoding_mode": '',
+        "method": "stability_aware_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "window_size": 10,
+        "alpha": 0.5,
+        "beta": 0.2
+    },
+
+    "heterogeneous_ensemble_rrf": {
+        "decoding_mode": '',
+        "method": "stability_aware_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "rank_mode": "rrf",
+        "rrf_k": 20,
+        "weighting_mode": "std_inverse",
+        "rsf_weights": None
+    },
+
+    "heterogeneous_ensemble_erf": {
+        "decoding_mode": '',
+        "method": "stability_aware_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "rank_mode": "erf",
+        "rrf_k": 20,
+        "weighting_mode": "std_inverse",
+        "rsf_weights": None
+    },
+
+    "heterogeneous_ensemble_rsf": {
+        "decoding_mode": '',
+        "method": "stability_aware_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
+        "rank_mode": "rsf",
+        "rrf_k": 20,
+        "weighting_mode": "std_inverse",
+        "rsf_weights": None
+    },
+
+    "semantic_consistency": {
+        "decoding_mode": '',
+        "method": "stability_aware_entropy",
+        "scoring_mode": 'log',
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
     },
 
     # "attention_dynamic": {
@@ -468,13 +522,6 @@ sampling_configs.update({
     #     "compression_ratio": 0.5
     # },
 
-    # "mars":{  # Todo
-    #     "method": "mars",
-    #     "scoring_mode": 'log',
-    #     "sampling_mode": "temperature",
-    #     "confidence": "entropy", 
-    # },
-
 })
 
 # All the methods to be evaluated
@@ -521,7 +568,7 @@ class Config:
     
     # Number of samples to process
     number_samples: int = int(os.getenv("N_SAMPLE", 500))
-    seed: int = int(os.getenv("SEED", 100))
+    seed: int = int(os.getenv("SEED", 102))
 
     # Path to few-shots
     gsm8k_shots: str = "inputs/shots/gsm8k.txt"
@@ -547,4 +594,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 1, 2, 3, 5, 6, 7"
+    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 7"

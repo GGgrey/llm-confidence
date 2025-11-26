@@ -14,99 +14,131 @@ from llmlingua import PromptCompressor
 
 def get_available_gpus(exclude_list: str):
     num_gpus = torch.cuda.device_count()
-    exclude = set([int(x) for x in exclude_list.split(",") if x.strip() != ""])
+    if num_gpus == 0:
+        return []
+    try:
+        if not exclude_list:
+            exclude = set()
+        else:
+            exclude = set(int(x.strip()) for x in exclude_list.split(",") if x.strip())
+    except ValueError as e:
+        print(f"Warning: Invalid format in exclude_gpus string ('{exclude_list}')")
+        exclude = set()
+    
     available = [i for i in range(num_gpus) if i not in exclude]
+
     if not available:
         raise RuntimeError("No GPUs available after applying exclusion list")
+    
     return available
 
 
 def load_jsonl(file):
     with open(file, "r", encoding="utf-8") as f:
-        for line in f:
+        for i, line in enumerate(f):
+            line = line.strip()
+            if not line: 
+                continue
             try:
                 yield json.loads(line)
-            except:
-                print("Error in loading: ", line)
-                exit()
+            except json.JSONDecodeError:
+                print(f"Warning: Error parsing JSON at line {i+1} in {file}")
+                continue
+            except Exception as e:
+                print(f"Warning: Unexpected error loading line {i+1} in {file}: {e}")
+                continue
+    print("Load file: ", file)
 
 
 def save_jsonl(samples, save_path):
     folder = os.path.dirname(save_path)
-    os.makedirs(folder, exist_ok=True)
+    if folder:
+        os.makedirs(folder, exist_ok=True)
 
     with open(save_path, "w", encoding="utf-8") as f:
         for sample in samples:
             f.write(json.dumps(sample, ensure_ascii=False) + "\n")
-    print("Saved to", save_path)
+    print("Save to: ", save_path)
 
 
 def seed_everything(seed=0):
-
     random.seed(seed)
-
     os.environ["PYTHONHASHSEED"] = str(seed)
-
     np.random.seed(seed)
-
     torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def load_model_and_tokenizer(model_name, read_model_from_huggingface=True):
+    print(f"Loading model: {model_name}")
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        device_map='auto',
-        local_files_only=read_model_from_huggingface,
-        trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
-        # attn_implementation="flash_attention_2"
-    )
-    model = model.eval()
+    if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+        dtype = torch.bfloat16
+    else:
+        dtype = torch.float16
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            device_map='auto',
+            local_files_only=read_model_from_huggingface,
+            trust_remote_code=True,
+            torch_dtype=dtype,
+            # attn_implementation="flash_attention_2"
+        )
+        model = model.eval()
 
-    return model, tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            trust_remote_code=True
+        )
+        return model, tokenizer
+    except Exception as e:
+        raise RuntimeError(f"Failed to load model/tokenizer: {e}")
 
 
 def load_lingua_model(lingua_model_name):
-
+    print(f"Loading Lingua model: {lingua_model_name}")
     llm_lingua = PromptCompressor(
         model_name=lingua_model_name,
         use_llmlingua2=True,
     )
-
     return llm_lingua
 
 
 def load_and_sample_parquet_datasets(data_dir, dataset_files, number_samples, seed):
-
     loaded_datasets = {}
     for filename, file_path in dataset_files.items():
-        file_path = os.path.join(data_dir, file_path)
-        if os.path.isfile(file_path):
-            df = pd.read_parquet(file_path)
-            df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
-            if len(df) > number_samples:
-                df = df.head(number_samples)
-            loaded_datasets[filename] = df
+        full_path  = os.path.join(data_dir, file_path)
+        if os.path.isfile(full_path ):
+            try:
+                df = pd.read_parquet(full_path )
+                df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
+                if len(df) > number_samples:
+                    df = df.head(number_samples)
+                loaded_datasets[filename] = df
+                print(f"Loaded {filename}: {len(df)} samples")
+            except Exception as e:
+                print(f"Error loading parquet {filename}: {e}")
+        else:
+            print(f"File not found: {full_path }")
 
     return loaded_datasets
 
 
 def load_datasets(data_dir, dataset_files):
-
     loaded_datasets = {}
     for filename, file_path in dataset_files.items():
-        file_path = os.path.join(data_dir, file_path)
+        full_path = os.path.join(data_dir, file_path)
         try:
-            df = pd.read_json(file_path, lines=True)  # jsonl -> DataFrame
+            df = pd.read_json(full_path, lines=True)  # jsonl -> DataFrame
             loaded_datasets[filename] = df
         except Exception as e:
-            print(f"Load {filename} failed")
+            print(f"Load {filename} failed: {e}")
     
     return loaded_datasets
 
@@ -146,34 +178,30 @@ def setup_tokenizer_padding_config(tokenizer, model):
 
 def batch_messages_creation(tokenizer, batch_questions, device, use_base_prompt):
 
-    batch_messages = []
+    batch_inputs = []
+
+    has_chat_template = hasattr(tokenizer, 'chat_template') and tokenizer.chat_template is not None
+
     for question in batch_questions:
-        batch_messages.append([
-            {
-                "role": "user",
-                "content": construct_prompt(
-                    question=question,
-                    use_base_prompt=use_base_prompt
-                )
-            }
-        ])
-    
-    batch_template_messages = []
-    for message in batch_messages:
-        if hasattr(tokenizer, 'chat_template') and tokenizer.chat_template:
+        content = construct_prompt(
+            question=question,
+            use_base_prompt=use_base_prompt
+        )
+
+        if has_chat_template:
+            messages = [{"role": "user", "content": content}]
             input_text = tokenizer.apply_chat_template(
-                message,
+                messages,
                 tokenize=False,
                 add_generation_prompt=True
             )
         else:
-            input_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in message])
-            input_text += "\nassistant:"
-        
-        batch_template_messages.append(input_text)
+            input_text = f"User: {content}\nAssistant:"
+
+        batch_inputs.append(input_text)
     
     tokenized_batch = tokenizer(
-        batch_template_messages,
+        batch_inputs,
         padding=True,
         truncation=True,
         return_tensors="pt"
@@ -250,6 +278,9 @@ def extract_all_boxed_answer_spans(text: str) -> Tuple[List[str], List[Tuple[int
 
 
 def find_last_subsequence_token_spans(full_text, sub_text, tokenizer):
+    if not sub_text:
+        return None, None
+    
     final_answer_token_start_idx = None
     final_answer_token_end_idx = None
 
@@ -414,11 +445,23 @@ def aggregate_paths_based_on_scores_using_min(paths):
 
 
 def save_results_to_csv(results, filename):
-    results_df = pd.DataFrame(results)
-    results_df.to_csv(filename, index=False)
+    try:
+        folder = os.path.dirname(filename)
+        if folder:
+            os.makedirs(folder, exist_ok=True)
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(filename, index=False)
+    except Exception as e:
+        print(f"Failed to save CSV to {filename}: {e}")
 
 
 def print_final_accuracy_table(method_final_acc):
     print("\n=== Final Accuracies ===")
     for method_name, acc in method_final_acc.items():
         print(f"{method_name}: {acc:.2f}%")
+
+
+if __name__ == "__main__":
+    exclude = "0, 1, 2"
+    gpu_list = get_available_gpus(exclude)
+    print(gpu_list)

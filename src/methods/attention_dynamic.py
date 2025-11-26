@@ -126,7 +126,6 @@ def attention_dynamic(sample_paths, method_cfg, model, tokenizer, config):
         union = np.union1d(T_loc_indices, T_glob_indices)
         # intersection = np.intersect1d(T_loc_indices, T_glob_indices)
 
-
         vocab_size = output_scores[0].shape[-1]
         log_vocab_size = np.log(vocab_size)
         confidences = []

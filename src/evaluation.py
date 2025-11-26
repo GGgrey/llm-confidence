@@ -32,7 +32,9 @@ from src.methods.attention_dynamic import attention_dynamic
 from src.methods.group_entropy import group_entropy
 from src.methods.quantile import quantile
 from src.methods.xentropy import xentropy
-# from src.methods.mars import mars
+from src.methods.stability_aware_entropy import stability_aware_entropy
+from src.methods.heterogeneous_ensemble import heterogeneous_ensemble
+from src.methods.semantic_consistency import semantic_consistency
 
 
 def dispatch_method(
@@ -60,13 +62,13 @@ def dispatch_method(
     elif method_name == "predictive_entropy":
         return predictive_entropy(sample_paths, False, tokenizer, config)
 
-    elif method_name == "normilized_entropy":
+    elif method_name == "normalized_entropy":
         return predictive_entropy(sample_paths, True, tokenizer, config)
 
     elif method_name == "likelihood":
         return likelihood(sample_paths, False, tokenizer, config)
 
-    elif method_name == "normilized_likelihood":
+    elif method_name == "normalized_likelihood":
         return likelihood(sample_paths, True, tokenizer, config)
 
     elif method_name == "perplexity":
@@ -109,9 +111,15 @@ def dispatch_method(
         method_name == "tsallis_entropy_lin" or method_name == "tsallis_entropy_exp" or \
         method_name == "renyi_entropy_lin" or method_name == "renyi_entropy_exp":
         return xentropy(sample_paths, method_cfg, config)
-
-    # elif method_name == "mars":  # Todo
-    #     method_output = mars(sample_paths, True, tokenizer, config)
+    
+    elif method_name == "stability_aware_entropy":
+        return stability_aware_entropy(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name.startswith("heterogeneous_ensemble_"):
+        return heterogeneous_ensemble(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name == "semantic_consistency":
+        return semantic_consistency(sample_paths, config)
 
     else:
         raise ValueError(f"Unsupported method: {method_name}")
@@ -330,9 +338,19 @@ def evaluate_batch_examples(
         print(f"\nGroup name: {group_name}")
 
         if group_name == "greedy":
-            group_results = handle_greedy_group(model, tokenizer, batch_questions, tokenized_batch, config, group_cfgs, device)
+            group_results = handle_greedy_group(
+                model, tokenizer,
+                batch_questions,
+                tokenized_batch,
+                config, group_cfgs, device
+            )
         elif group_name == "sampling":
-            group_results = handle_sampling_group(model, tokenizer, lingua_model, batch_questions, batch_correct_answers, tokenized_batch, config, group_cfgs, device)
+            group_results = handle_sampling_group(
+                model, tokenizer, lingua_model,
+                batch_questions, batch_correct_answers,
+                tokenized_batch,
+                config, group_cfgs, device
+            )
         
         all_results.append(group_results)
 
