@@ -3,7 +3,7 @@ import re
 import numpy as np
 import torch
 
-from src.utils import aggregate_paths_based_on_scores, find_last_subsequence_token_spans, find_all_subsequence_token_spans
+from src.utils.utils import aggregate_paths_based_on_scores, find_last_subsequence_token_spans, find_all_subsequence_token_spans
 
 
 def calculate_confidence_for_all_answers(logits_spans, answer_ids, token_spans, confidence_method):

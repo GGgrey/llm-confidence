@@ -6,13 +6,13 @@ import os
 import torch
 
 from src.config import method_groups
-from src.utils import (
+from src.utils.utils import (
     load_model_and_tokenizer, load_and_sample_parquet_datasets, load_lingua_model,
     setup_tokenizer_padding_config, batch_messages_creation, save_results_to_csv,
     print_final_accuracy_table, extract_answer, load_datasets,
     seed_everything, get_available_gpus
 )
-from src.grader import math_equal, check_is_correct
+from src.utils.grader import math_equal, check_is_correct
 from src.methods.oracle import oracle_self_consistency
 from src.methods.cer import cer
 from src.methods.self_consistency import self_consistency

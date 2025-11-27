@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from src.utils import aggregate_paths_based_on_scores
+from src.utils.utils import aggregate_paths_based_on_scores
 
 
 def get_attn_weights(generated_ids, model):

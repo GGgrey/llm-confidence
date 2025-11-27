@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from src.utils import aggregate_paths_based_on_scores_using_min
+from src.utils.utils import aggregate_paths_based_on_scores_using_min
 
 
 def window_entropy(sample_paths, tokenizer, config, normalized_length=True, top_k=20, window_size=10):

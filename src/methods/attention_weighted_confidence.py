@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import torch
 
-from src.utils import aggregate_paths_based_on_scores, extract_last_numerical_value
+from src.utils.utils import aggregate_paths_based_on_scores, extract_last_numerical_value
 
 
 def plot_token_importance(token_importance, tokens, tokenizer):

@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from src.utils import aggregate_paths_based_on_scores
+from src.utils.utils import aggregate_paths_based_on_scores
 
 
 def get_output_scores(generated_ids, model):

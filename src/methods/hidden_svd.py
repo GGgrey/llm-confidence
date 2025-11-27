@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from src.utils import aggregate_paths_based_on_scores_using_min
+from src.utils.utils import aggregate_paths_based_on_scores_using_min
 
 
 def get_hidden_states(generated_ids, model):

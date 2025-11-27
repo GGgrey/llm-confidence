@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from src.utils import aggregate_paths_based_on_scores
+from src.utils.utils import aggregate_paths_based_on_scores
 
 
 def calculate_confidence_for_tokens(logits, selected_tokens_idx, selected_tokens_ids, confidence_method="default"):

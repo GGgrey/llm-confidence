@@ -1,4 +1,4 @@
-from src.grader import check_is_correct
+from src.utils.grader import check_is_correct
 
 
 def oracle_self_consistency(sample_paths):

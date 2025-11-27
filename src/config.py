@@ -508,7 +508,7 @@ method_groups = {
 class Config:
     # Path to the HuggingFace model or local directory
     model_name: str = os.getenv(
-        "MODEL_NAME", "/models/Qwen/Qwen2.5-7B-Instruct"
+        "MODEL_NAME", "/models/meta-llama/Llama-3.1-8B-Instruct"
     )
     lingua_model_name: str = os.getenv(
         "LLMLINGUA_MODEL_NAME", "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
@@ -541,7 +541,7 @@ class Config:
     
     # Number of samples to process
     number_samples: int = int(os.getenv("N_SAMPLE", 500))
-    seed: int = int(os.getenv("SEED", 104))
+    seed: int = int(os.getenv("SEED", 101))
 
     # Path to few-shots
     gsm8k_shots: str = "inputs/shots/gsm8k.txt"
@@ -567,4 +567,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 7"
+    exclude_gpus: str = "0, 2, 3, 4, 5, 6, 7"

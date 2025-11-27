@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from src.utils import aggregate_paths_based_on_scores_using_min
+from src.utils.utils import aggregate_paths_based_on_scores_using_min
 
 
 def stability_aware_entropy(sample_paths, method_cfg, tokenizer, config, window_size=10, alpha=0.5, beta=0.2):

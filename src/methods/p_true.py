@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from src.utils import construct_p_true_prompt, aggregate_paths_based_on_scores
+from src.utils.utils import construct_p_true_prompt, aggregate_paths_based_on_scores
 
 
 def p_true(sample_paths, tokenizer, model, device, config):

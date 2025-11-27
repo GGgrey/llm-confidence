@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from scipy.signal import savgol_filter
 
-from src.utils import aggregate_paths_based_on_scores_using_min
+from src.utils.utils import aggregate_paths_based_on_scores_using_min
 
 
 def trend_linear_regression(entropy):

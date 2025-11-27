@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Tuple, Type, Optional
 import torch
 import torch.nn.functional as F
 
-from src.utils import aggregate_paths_based_on_scores
+from src.utils.utils import aggregate_paths_based_on_scores
 
 
 class BaseMetric(ABC):

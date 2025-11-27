@@ -1,7 +1,7 @@
 import torch.nn.functional as F
 import torch
 
-from src.utils import aggregate_paths_based_on_scores
+from src.utils.utils import aggregate_paths_based_on_scores
 
 
 def quantile(sample_paths, method_cfg, tokenizer, config):
