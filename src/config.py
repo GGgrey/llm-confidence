@@ -436,7 +436,7 @@ sampling_configs.update({
         "sampling_mode": "temperature",
         "rank_mode": "rrf",
         "ensemble_metrics": ["mean_entropy", "mean_logprob", "min_prob", "quantile_logit_0", "quantile_logit_5", "quantile_logit_10", "quantile_logit_15", "quantile_logit_20", "quantile_logit_25", "quantile_logit_30", "quantile_logit_35", "quantile_logit_40", "quantile_logit_45", "quantile_logit_50", "quantile_logit_55", "quantile_logit_60", "quantile_logit_65", "quantile_logit_70", "quantile_logit_75", "quantile_logit_80", "quantile_logit_85", "quantile_logit_90", "quantile_logit_95", "quantile_logit_100"],
-        "rrf_k": 10,
+        "rrf_k": 60,
         "weighting_mode": "std_inverse",
     },
 
@@ -541,7 +541,7 @@ class Config:
     
     # Number of samples to process
     number_samples: int = int(os.getenv("N_SAMPLE", 500))
-    seed: int = int(os.getenv("SEED", 101))
+    seed: int = int(os.getenv("SEED", 108))
 
     # Path to few-shots
     gsm8k_shots: str = "inputs/shots/gsm8k.txt"
@@ -567,4 +567,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 2, 3, 4, 5, 6, 7"
+    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 6"
