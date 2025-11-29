@@ -35,6 +35,7 @@ from src.methods.xentropy import xentropy
 from src.methods.stability_aware_entropy import stability_aware_entropy
 from src.methods.heterogeneous_ensemble import heterogeneous_ensemble
 from src.methods.semantic_consistency import semantic_consistency
+from src.methods.distinct_entropy import distinct_entropy
 
 
 def dispatch_method(
@@ -120,6 +121,9 @@ def dispatch_method(
     
     elif method_name == "semantic_consistency":
         return semantic_consistency(sample_paths, config)
+    
+    elif method_name == "distinct_entropy":
+        return distinct_entropy(sample_paths, True, tokenizer, config)
 
     else:
         raise ValueError(f"Unsupported method: {method_name}")

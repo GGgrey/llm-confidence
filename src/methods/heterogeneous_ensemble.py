@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Tuple, Type, Optional
 
+import numpy as np
+from sklearn.linear_model import LinearRegression
 import torch
 import torch.nn.functional as F
 
@@ -38,6 +40,8 @@ class MinProbMetric(BaseMetric):
         super().__init__("min_prob", lower_is_better=False)
 
     def compute(self, context: Dict[str, Any]) -> float:
+        if context["probs"].numel() == 0:
+            return 0.0
         return context["probs"].min().item()
     
 
@@ -64,16 +68,90 @@ class QuantileLogitMetric(BaseMetric):
         self.alpha = alpha
 
     def compute(self, context: Dict[str, Any]) -> float:
+        if context["logits"].numel() == 0:
+            return 0.0
         s_quant = torch.quantile(context["logits"], self.alpha).item()
         return s_quant
+
+
+class LengthMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("length", lower_is_better=True)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        seq_len = context["entropy"].numel()
+        return np.log1p(seq_len)
     
 
-METRIC_REGISTRY: Dict[str, Type[BaseMetric]] = {
+class TrendMetric(BaseMetric):
+    def __init__(self):
+        super().__init__("trend", lower_is_better=True)
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        seq_len = context["entropy"].numel()
+        if seq_len < 2:
+            return 0.0
+        y = context["entropy"].cpu().numpy()
+        x = np.arange(seq_len)
+        slope = np.polyfit(x, y, 1)[0]
+        return slope
+    
+
+class TailConfidenceMetric(BaseMetric):
+    def __init__(self, tail_tokens: int):
+        super().__init__("tail_confidence", lower_is_better=True)
+        self.tail_tokens = tail_tokens
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        if len(context["entropy"]) <= self.tail_tokens:
+            return context["entropy"].mean().item()
+        tail_confidence = context["entropy"][-self.tail_tokens:]
+        return tail_confidence.mean().item()
+    
+
+class GroupConfidence(BaseMetric):
+    def __init__(self, name: str, window_size=50, bottom_percent=0.1):
+        super().__init__(name, lower_is_better=True)
+        self.name = name
+        self.window_size = window_size
+        self.bottom_percent = bottom_percent
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        entropy = context["entropy"]  # Shape: (seq_len,)
+        seq_len = entropy.numel()
+        if seq_len <= self.window_size: 
+            return entropy.mean().item()
+        windows = entropy.unfold(dimension=0, size=self.window_size, step=1)
+        window_means = windows.mean(dim=1)  # Shape: (num_windows,)
+        if window_means.numel() == 0:
+            return 0.0
+        if self.name == "mean_group_confidence":
+            return window_means.mean().item()
+        elif self.name == "lowest_group_confidence":
+            return window_means.min().item()
+        elif self.name == "bottom_group_confidence":
+            num_bottom = max(1, int(len(window_means) * self.bottom_percent))
+            if num_bottom == 1:
+                return window_means.min().item()
+            else:
+                bottom_means, _ = torch.topk(window_means, k=num_bottom, largest=False)
+                return bottom_means.mean().item()
+        else:
+            raise ValueError(f"Unsupported method: {self.name}")
+
+
+METRIC_REGISTRY: Dict[str, Any] = {
     "mean_entropy": MeanEntropyMetric,
     "mean_logprob": MeanLogProbMetric,
     "min_prob": MinProbMetric,
     "ppl": PerplexityMetric,
     "mean_logit": MeanLogitMetric,
+    "length": LengthMetric,
+    "trend": TrendMetric,
+    "tail_confidence": lambda: TailConfidenceMetric(tail_tokens=50),
+    "lowest_group_confidence": lambda: GroupConfidence(name="lowest_group_confidence", window_size=50),
+    "mean_group_confidence": lambda: GroupConfidence(name="mean_group_confidence", window_size=50),
+    "bottom_group_confidence": lambda: GroupConfidence(name="bottom_group_confidence", window_size=50, bottom_percent=0.1),
 }
 
 
@@ -94,7 +172,10 @@ def get_metrics_from_config(method_cfg: Dict) -> List[BaseMetric]:
             except ValueError:
                 raise ValueError(f"Invalid quantile metric format: {name}")
         elif name in METRIC_REGISTRY:
-            active_metrics.append(METRIC_REGISTRY[name]())
+            try:
+                active_metrics.append(METRIC_REGISTRY[name]())
+            except TypeError as e:
+                raise TypeError(f"Error instantiating metric '{name}': {e}")
         else:
             raise ValueError(
                 f"Metric '{name}' not found. "
