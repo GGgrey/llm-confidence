@@ -16,6 +16,7 @@ import torch.nn.functional as F
 
 from src.utils.utils import construct_prompt, extract_answer, load_datasets, load_model_and_tokenizer, seed_everything, setup_tokenizer_padding_config
 from src.utils.grader import check_is_correct, evaluate_math
+from src.utils.parser import extract_answer_pro
 
 
 def clean_and_parse(cell_value):

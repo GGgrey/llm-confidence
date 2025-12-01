@@ -2,10 +2,14 @@ import random
 import regex
 import re
 import sympy
+import func_timeout
+from contextlib import redirect_stdout
+from io import StringIO
+from typing import TypeVar, Iterable, List, Union, Any, Dict
+
 from pylatexenc import latex2text
 from sympy.parsing import sympy_parser
 from latex2sympy2 import latex2sympy
-from typing import TypeVar, Iterable, List, Union, Any, Dict
 from word2number import w2n
 
 
@@ -210,7 +214,7 @@ unit_texts = [
 unit_texts.extend([t + "s" for t in unit_texts])
 
 
-def strip_string(string):
+def strip_string(string, skip_unit=False):
     string = str(string).strip()
     # Linebreaks
     string = string.replace("\n", "")
@@ -250,12 +254,15 @@ def strip_string(string):
         # print("Warning: unit not removed: '{}' -> '{}'".format(string, _string))
         string = _string
 
-    for unit_text in unit_texts:
-        # Use regex, the prefix should be either the start of the string or a non-alphanumeric character
-        # The suffix should be either the end of the string or a non-alphanumeric character
-        _string = re.sub(r"(^|\W)" + unit_text + r"($|\W)", r"\1\2", string)
-        if _string != "":
-            string = _string
+    if not skip_unit:
+        # Remove unit: texts
+        for _ in range(2):
+            for unit_text in unit_texts:
+                # use regex, the prefix should be either the start of the string or a non-alphanumeric character
+                # the suffix should be either the end of the string or a non-alphanumeric character
+                _string = re.sub(r"(^|\W)" + unit_text + r"($|\W)", r"\1\2", string)
+                if _string != "":
+                    string = _string
 
     # Remove circ (degrees)
     string = string.replace("^{\\circ}", "")
@@ -537,20 +544,300 @@ def extract_answer(pred_str, use_last_number=True):
     return pred
 
 
-def parse_ground_truth(example: Dict[str, Any], data_name):
-    if "answer" in example:
-        return None, str(example["answer"])
-    else:
-        return None, None
+ANSWER_INDICATOR = " answer is"
 
 
-def parse_question(example, data_name=None):
-    question = ""
-    for key in ["question", "problem", "Question", "input"]:
-        if key in example:
-            question = example[key]
-            break
+def safe_execute(code_string: str, maxtime=1):
+    def execute(x):
+        try:
+            f = StringIO()
+            with redirect_stdout(f):
+                exec(f'from math import *\n{x}')
+            return f.getvalue().strip()
+        except Exception as e:
+            return 'error'
+    try:
+        ans = func_timeout.func_timeout(maxtime, execute, args=(code_string,))
+    except func_timeout.FunctionTimedOut:
+        ans = 'timeerror'
+    return ans
+
+
+def extract_answer_with_code(pred_str, use_code=False):
+    if use_code:
+        return safe_execute(pred_str.strip())
     
+    if 'USER:' in pred_str:
+        pred_str = pred_str.split('USER:')[0]
+    if (ANSWER_INDICATOR in pred_str):
+        pred = pred_str.split(ANSWER_INDICATOR)[-1].strip()
+    elif 'boxed' in pred_str:
+        ans = pred_str.split('boxed')[-1]
+        if len(ans) == 0:
+            return ""
+        elif (ans[0] == '{'):
+            stack = 1
+            a = ''
+            for c in ans[1:]:
+                if (c == '{'):
+                    stack += 1
+                    a += c
+                elif (c == '}'):
+                    stack -= 1
+                    if (stack == 0): break
+                    a += c
+                else:
+                    a += c
+        else:
+            a = ans.split('$')[0].strip()
+        pred=a
+    else:
+        pattern = '-?\d*\.?\d+'
+        pred = re.findall(pattern, pred_str.replace(",", ""))
+        if(len(pred) >= 1):
+            pred = pred[-1]
+        else: pred = ''
+    
+    # multiple line
+    pred = pred.split("\n")[0]
+    if pred != "" and pred[0] == ":":
+        pred = pred[1:]
+    if pred != "" and pred[-1] == ".":
+        pred = pred[:-1]
+    if pred != "" and pred[-1] == "/":
+        pred = pred[:-1]
+    pred = strip_string(pred)
+    return pred
+
+
+def extract_answer_pro(pred_str, data_name="", use_last_number=True):
+    pred_str = pred_str.replace("\u043a\u0438", "")
+    if data_name in ["mmlu_stem", "sat_math", "aqua", "gaokao2023"]:
+        # TODO check multiple choice
+        return choice_answer_clean(pred_str)
+
+    if "final answer is $" in pred_str and "$. I hope" in pred_str:
+        # minerva_math
+        tmp = pred_str.split("final answer is $", 1)[1]
+        pred = tmp.split("$. I hope", 1)[0].strip()
+    elif "boxed" in pred_str:
+        ans = pred_str.split("boxed")[-1]
+        if len(ans) == 0:
+            return ""
+        elif ans[0] == "{":
+            stack = 1
+            a = ""
+            for c in ans[1:]:
+                if c == "{":
+                    stack += 1
+                    a += c
+                elif c == "}":
+                    stack -= 1
+                    if stack == 0:
+                        break
+                    a += c
+                else:
+                    a += c
+        else:
+            a = ans.split("$")[0].strip()
+        pred = a
+    elif "he answer is" in pred_str:
+        pred = pred_str.split("he answer is")[-1].strip()
+    elif "final answer is" in pred_str:
+        pred = pred_str.split("final answer is")[-1].strip()
+    elif "答案是" in pred_str:
+        # Handle Chinese few-shot multiple choice problem answer extraction
+        pred = pred_str.split("答案是")[1].strip().split("\n\n")[0].strip()
+    else:  # use the last number
+        if use_last_number:
+            pattern = "-?\d*\.?\d+"
+            pred = re.findall(pattern, pred_str.replace(",", ""))
+            if len(pred) >= 1:
+                pred = pred[-1]
+            else:
+                pred = ""
+        else:
+            pred = ""
+
+    # choice answer
+    if (
+        data_name in ["sat_math", "aqua", "gpqa"]
+        or "mmlu" in data_name
+    ):
+        tmp = re.findall(r"\b(A|B|C|D|E)\b", pred.upper())
+        if tmp:
+            pred = tmp[-1]
+        else:
+            pred = pred.strip().strip(".")
+
+    # multiple line
+    # pred = pred.split("\n")[0]
+    pred = re.sub(r"\n\s*", "", pred)
+    if pred != "" and pred[0] == ":":
+        pred = pred[1:]
+    if pred != "" and pred[-1] == ".":
+        pred = pred[:-1]
+    if pred != "" and pred[-1] == "/":
+        pred = pred[:-1]
+    pred = strip_string(pred, skip_unit=data_name in ["carp_en", "minerva_math"])
+    # print(pred)
+    return pred
+
+
+STRIP_EXCEPTIONS = ["carp_en", "minerva_math"]
+
+
+def parse_ground_truth(example: Dict[str, Any], data_name):
+    
+    if "gt_cot" in example and "gt" in example:
+
+        if data_name in ["math"]:
+            gt_ans = extract_answer(example["gt_cot"], data_name)
+        elif data_name == "omni-math":
+            if "boxed" not in example["gt_cot"]:
+                example["gt_cot"] = "\\boxed" + "{" + example['gt_cot'] + "}"
+            gt_ans = extract_answer(example["gt_cot"], data_name)
+        elif data_name in STRIP_EXCEPTIONS:
+            gt_ans = example["gt"]
+        else:
+            gt_ans = strip_string(example["gt"])
+        return example["gt_cot"], gt_ans
+
+    # parse ground truth
+    if data_name in ["math", "minerva_math", "omni-math", 'aime', 'math500', 'aime2024', 'aime2025']:
+        gt_cot = example["solution"]
+        gt_ans = extract_answer(gt_cot, data_name)
+    elif "gsm8k" in data_name:
+        gt_cot, gt_ans = example["answer"].split("####")
+    elif data_name == "svamp":
+        gt_cot, gt_ans = example["Equation"], example["Answer"]
+    elif data_name == "asdiv":
+        gt_cot = example["formula"]
+        gt_ans = re.sub(r"\(.*?\)", "", example["answer"])
+    elif data_name == "mawps":
+        gt_cot, gt_ans = None, example["target"]
+    elif data_name == "tabmwp":
+        gt_cot = example["solution"]
+        gt_ans = example["answer"]
+        if example["ans_type"] in ["integer_number", "decimal_number"]:
+            if "/" in gt_ans:
+                gt_ans = int(gt_ans.split("/")[0]) / int(gt_ans.split("/")[1])
+            elif "," in gt_ans:
+                gt_ans = float(gt_ans.replace(",", ""))
+            elif "%" in gt_ans:
+                gt_ans = float(gt_ans.split("%")[0]) / 100
+            else:
+                gt_ans = float(gt_ans)
+    elif data_name == "carp_en":
+        gt_cot, gt_ans = example["steps"], example["answer"]
+    elif data_name == "mmlu_stem":
+        abcd = "ABCD"
+        gt_cot, gt_ans = None, abcd[example["answer"]]
+    elif data_name == "sat_math":
+        gt_cot, gt_ans = None, example["Answer"]
+    elif data_name == "aqua":
+        gt_cot, gt_ans = None, example["correct"]
+    elif data_name in ["gaokao2023en", "college_math", "gaokao_math_cloze"]:
+        gt_cot, gt_ans = None, example["answer"].replace("$", "").strip()
+    elif data_name == "gaokao_math_qa":
+        gt_cot, gt_ans = None, example["label"]
+    elif data_name in ["gaokao2024_mix", "cn_middle_school"]:
+        if len(example["choice_answer"]) > 0:
+            gt_cot, gt_ans = None, example["choice_answer"]
+        else:
+            gt_cot, gt_ans = None, example["answer"]
+    elif data_name == "olympiadbench":
+        gt_cot, gt_ans = None, example["final_answer"][0].strip("$")
+    elif data_name in [
+        "aime24",
+        "amc23",
+        "cmath",
+        "gaokao2024_I",
+        "gaokao2024_II",
+        "imo2024",
+        "gpqa"
+    ]:
+        gt_cot, gt_ans = None, example["answer"]
+    else:
+        raise NotImplementedError(f"`{data_name}`")
+    # post process
+    gt_cot = str(gt_cot).strip()
+    if data_name not in STRIP_EXCEPTIONS:
+        gt_ans = strip_string(gt_ans, skip_unit=data_name == "carp_en")
+    else:
+        gt_ans = (
+            gt_ans.replace("\\neq", "\\ne")
+            .replace("\\leq", "\\le")
+            .replace("\\geq", "\\ge")
+        )
+    return gt_cot, gt_ans
+
+
+def parse_question(example, data_name):
+    question = ""
+    if data_name == "asdiv":
+        question = f"{example['body'].strip()} {example['question'].strip()}"
+    elif data_name == "svamp":
+        body = example["Body"].strip()
+        if not body.endswith("."):
+            body = body + "."
+        question = f'{body} {example["Question"].strip()}'
+    elif data_name == "tabmwp":
+        title_str = (
+            f'regarding "{example["table_title"]}" ' if example["table_title"] else ""
+        )
+        question = f"Read the following table {title_str}and answer a question:\n"
+        question += f'{example["table"]}\n{example["question"]}'
+        if example["choices"]:
+            question += (
+                f' Please select from the following options: {example["choices"]}'
+            )
+    elif data_name == "carp_en":
+        question = example["content"]
+    elif data_name == "mmlu_stem":
+        options = example["choices"]
+        assert len(options) == 4
+        for i, (label, option) in enumerate(zip("ABCD", options)):
+            options[i] = f"({label}) {str(option).strip()}"
+        options = " ".join(options)
+        # question = f"{example['question'].strip()}\nWhat of the following is the right choice? Explain your answer.\n{options}"
+        question = f"{example['question'].strip()}\nAnswer Choices: {options}"
+    elif data_name == "sat_math":
+        options = example["options"].strip()
+        assert "A" == options[0]
+        options = "(" + options
+        for ch in "BCD":
+            if f" {ch}) " in options:
+                options = regex.sub(f" {ch}\) ", f" ({ch}) ", options)
+        # question = f"{example['question'].strip()}\nWhat of the following is the right choice? Explain your answer.\n{options.strip()}"
+        question = f"{example['question'].strip()}\nAnswer Choices: {options}"
+    elif "aqua" in data_name:
+        options = example["options"]
+        choice = "(" + "(".join(options)
+        choice = choice.replace("(", " (").replace(")", ") ").strip()
+        choice = "\nAnswer Choices: " + choice
+        question = example["question"].strip() + choice
+    elif data_name == "gaokao_math_qa":
+        options_dict = example["options"]
+        options = []
+        for key in options_dict:
+            options.append(f"({key}) {options_dict[key]}")
+        options = " ".join(options)
+        question = f"{example['question'].strip()}\n选项: {options}"
+    else:
+        for key in ["question", "problem", "Question", "input"]:
+            if key in example:
+                question = example[key]
+                break
+    # assert question != ""
+    # Yes or No question
+    _, gt_ans = parse_ground_truth(example, data_name)
+    if isinstance(gt_ans, str):
+        gt_lower = gt_ans.lower()
+        if gt_lower in ["true", "false"]:
+            question += " (True or False)"
+        if gt_lower in ["yes", "no"]:
+            question += " (Yes or No)"
     return question.strip()
 
 

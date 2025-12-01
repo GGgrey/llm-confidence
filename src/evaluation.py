@@ -13,6 +13,7 @@ from src.utils.utils import (
     seed_everything, get_available_gpus
 )
 from src.utils.grader import math_equal, check_is_correct
+from src.utils.parser import extract_answer_pro
 from src.methods.oracle import oracle_self_consistency
 from src.methods.cer import cer
 from src.methods.self_consistency import self_consistency
@@ -37,6 +38,7 @@ from src.methods.heterogeneous_ensemble import heterogeneous_ensemble
 from src.methods.semantic_consistency import semantic_consistency
 from src.methods.distinct_entropy import distinct_entropy
 from src.methods.permutation_entropy import permutation_entropy
+from src.methods.self_certainty import self_certainty
 
 
 def dispatch_method(
@@ -128,6 +130,9 @@ def dispatch_method(
     
     elif method_name == "permutation_entropy":
         return permutation_entropy(sample_paths, tokenizer, config)
+    
+    elif method_name == "self_certainty":
+        return self_certainty(sample_paths, method_cfg, tokenizer, config)
 
     else:
         raise ValueError(f"Unsupported method: {method_name}")
@@ -180,7 +185,7 @@ def handle_sampling_group(
             answer_text = tokenizer.decode(answer_ids, skip_special_tokens=True)
             output_scores = torch.stack([x[i] for x in batch_output.scores])
 
-            final_answer = extract_answer(answer_text)
+            final_answer = extract_answer_pro(answer_text)
 
             paths[i].append({
                 "prompt": batch_questions[i],
@@ -279,7 +284,7 @@ def handle_greedy_group(
         answer_text = tokenizer.decode(answer_ids, skip_special_tokens=True)
         output_scores = torch.stack([x[i] for x in batch_output.scores])
 
-        final_answer = extract_answer(answer_text)
+        final_answer = extract_answer_pro(answer_text)
 
         paths[i].append({
             "prompt": batch_questions[i],

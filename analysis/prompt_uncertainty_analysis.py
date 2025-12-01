@@ -14,6 +14,7 @@ from scipy.stats import ks_2samp
 
 from src.utils.grader import check_is_correct
 from src.utils.utils import extract_answer
+from src.utils.parser import extract_answer_pro
 
 
 def get_available_gpus(exclude_list: str):

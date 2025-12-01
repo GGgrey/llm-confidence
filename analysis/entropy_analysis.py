@@ -14,6 +14,7 @@ import numpy as np
 from src.config import Config
 from src.utils.utils import load_model_and_tokenizer, setup_tokenizer_padding_config, construct_prompt, extract_answer
 from src.utils.grader import math_equal, check_is_correct
+from src.utils.parser import extract_answer_pro
 
 
 def load_dataset(file_path):

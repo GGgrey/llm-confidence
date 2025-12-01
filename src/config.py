@@ -462,6 +462,13 @@ sampling_configs.update({
         "confidence": "entropy",
     },
 
+    "self_certainty": {
+        "method": "self_certainty",
+        "sampling_mode": "temperature",
+        "confidence": "kl",
+        "borda_p": 0.3,
+    }
+
     # "attention_dynamic": {
     #     "method": "attention_dynamic",
     #     "scoring_mode": 'union',
@@ -540,7 +547,7 @@ class Config:
     )
 
     # Sampling parameters
-    k: int = int(os.getenv("K", 16))
+    k: int = int(os.getenv("K", 8))
     num_beams: int = int(os.getenv("NUM_BEAMS", 1))
     temperature: float = float(os.getenv("TEMPERATURE", 0.7))
     top_p: float = float(os.getenv("TOP_P", 0.95))
@@ -581,4 +588,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 1, 2, 3, 4, 6, 7"
+    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 7"
