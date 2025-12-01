@@ -24,18 +24,24 @@ def _get_ngram_counts(sample_paths, n=3):
     return global_counts
 
 
-def distinct_entropy(sample_paths, normalized_length, tokenizer, config):
+def distinct_entropy(sample_paths, method_cfg, normalized_length, tokenizer, config):
 
     method_records = []
     num_paths = len(sample_paths)
 
-    ngram_n = getattr(config, "distinct_ngram_n", 3)
-    common_threshold_ratio = getattr(config, "distinct_threshold_ratio", 0.6)
+    ngram_n_config = method_cfg.get("distinct_ngram_n", 3)
+    if isinstance(ngram_n_config, int):
+        ngram_n_list = [ngram_n_config]
+    else:
+        ngram_n_list = ngram_n_config  # e.g., [2, 3, 4, 5, ...]
+    common_threshold_ratio = method_cfg.get("distinct_threshold_ratio", 0.6)
 
-    global_ngram_counts = None
+    global_ngram_counts_map = {}
     threshold_count = 0
+    
     if num_paths >= 2:
-        global_ngram_counts = _get_ngram_counts(sample_paths, n=ngram_n)
+        for n in ngram_n_list:
+            global_ngram_counts_map[n] = _get_ngram_counts(sample_paths, n=n)
         threshold_count = num_paths * common_threshold_ratio
 
     for path in sample_paths:
@@ -51,17 +57,23 @@ def distinct_entropy(sample_paths, normalized_length, tokenizer, config):
         if tokenizer.pad_token_id is not None:
             valid_mask = valid_mask & (answer_ids != tokenizer.pad_token_id)
 
-        if global_ngram_counts and len(answer_ids) >= ngram_n:
+        if num_paths >= 2 and len(global_ngram_counts_map) > 0:
             ids_list = answer_ids.tolist()
             distinct_mask = torch.ones_like(answer_ids, dtype=torch.bool)
 
-            for i in range(len(ids_list) - ngram_n + 1):
-                ngram = tuple(ids_list[i : i + ngram_n])
-                if global_ngram_counts.get(ngram, 0) >= threshold_count:
-                    distinct_mask[i : i + ngram_n] = False
+            for n in ngram_n_list:
+                current_counts = global_ngram_counts_map.get(n)
+                if not current_counts:
+                    continue
+                    
+                if len(ids_list) >= n:
+                    for i in range(len(ids_list) - n + 1):
+                        ngram = tuple(ids_list[i : i + n])
+                        if current_counts.get(ngram, 0) >= threshold_count:
+                            distinct_mask[i : i + n] = False
             
             valid_mask = valid_mask & distinct_mask
-
+        
         filtered_entropy = entropy[valid_mask]
 
         if len(filtered_entropy) == 0:

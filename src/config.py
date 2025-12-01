@@ -452,6 +452,14 @@ sampling_configs.update({
         "method": "distinct_entropy",
         "sampling_mode": "temperature",
         "confidence": "entropy",
+        "distinct_ngram_n": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "distinct_threshold_ratio": 0.6
+    },
+
+    "permutation_entropy": {
+        "method": "permutation_entropy",
+        "sampling_mode": "temperature",
+        "confidence": "entropy",
     },
 
     # "attention_dynamic": {
@@ -547,7 +555,7 @@ class Config:
     
     # Number of samples to process
     number_samples: int = int(os.getenv("N_SAMPLE", 500))
-    seed: int = int(os.getenv("SEED", 110))
+    seed: int = int(os.getenv("SEED", 42))
 
     # Path to few-shots
     gsm8k_shots: str = "inputs/shots/gsm8k.txt"
@@ -573,4 +581,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 6"
+    exclude_gpus: str = "0, 1, 2, 3, 4, 6, 7"
