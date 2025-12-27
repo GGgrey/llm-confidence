@@ -6,6 +6,9 @@ from src.utils.utils import aggregate_paths_based_on_scores
 
 def get_output_scores(generated_ids, model):
     output_scores = None
+
+    if generated_ids.device != model.device:
+        generated_ids = generated_ids.to(model.device)
     
     with torch.no_grad():
         outputs = model(
@@ -14,8 +17,10 @@ def get_output_scores(generated_ids, model):
             return_dict=True
         )
 
-        if hasattr(outputs, 'logits') and outputs.logits is not None:
+        if hasattr(outputs, "logits") and outputs.logits is not None:
             output_scores = outputs.logits[0]  # (seq_len, vocab_size)
+
+        del outputs
     
     if output_scores is None:
         return None
@@ -77,7 +82,7 @@ def compression_confidence(sample_paths, method_cfg, model, lingua_model, tokeni
 
         compressed_output = lingua_model.compress_prompt(answer_text, rate=compression_ratio, force_reserve_digit=True, drop_consecutive=True)
         compressed_answer_text = compressed_output['compressed_prompt']
-        compressed_answer_ids = tokenizer.encode(compressed_answer_text, return_tensors='pt').squeeze(0).to(device)
+        compressed_answer_ids = tokenizer.encode(compressed_answer_text, return_tensors='pt').squeeze(0).to(generated_ids.device)
         compressed_ids = torch.cat((generated_ids[:prompt_len], compressed_answer_ids), dim=0)
 
         compressed_scores = get_output_scores(compressed_ids, model)
@@ -88,8 +93,16 @@ def compression_confidence(sample_paths, method_cfg, model, lingua_model, tokeni
 
     if not method_records or len(method_records) != len(sample_paths):
         raise RuntimeError("Decoding error")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
 
     if config.aggregate:
-        return aggregate_paths_based_on_scores(method_records)
+        result = aggregate_paths_based_on_scores(method_records)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info

@@ -46,9 +46,17 @@ def quantile(sample_paths, method_cfg, tokenizer, config):
         method_records.append((answer_text, s_quant, final_answer))
     
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in quantile")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
     
     if config.aggregate:
-        return aggregate_paths_based_on_scores(method_records)
+        result = aggregate_paths_based_on_scores(method_records)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info

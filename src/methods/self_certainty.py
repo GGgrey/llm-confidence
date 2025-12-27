@@ -44,17 +44,15 @@ def self_certainty(sample_paths, method_cfg, tokenizer, config):
         final_answer = path["final_answer"]
         answer_ids = path["answer_ids"]
         answer_text = path["answer_text"]
-        output_scores = path["output_scores"]
+        output_logits = path["output_logits"]
 
-        # Get probabilities distribution
-        probs = F.softmax(output_scores, dim=-1)
+        V = output_logits.size(-1)
+        V_tensor = torch.tensor(V, dtype=output_logits.dtype, device=output_logits.device)
+        log_probs = F.log_softmax(output_logits, dim=-1)
+        logprob_sum = torch.sum(log_probs, dim=-1)
 
-        # Get vocabulary size (V)
-        vocab_size = output_scores.size(-1)
-
-        # Calculate self-certainty
-        log_term = torch.log(vocab_size * probs + 1e-9)
-        kl = - (1.0 / vocab_size) * torch.sum(log_term, dim=-1)
+        # Formula: -1/V * sum(log_p) - log(V)
+        kl = -1/V * logprob_sum - torch.log(V_tensor)
 
         if tokenizer.pad_token_id is not None:
             mask = answer_ids != tokenizer.pad_token_id
@@ -65,10 +63,18 @@ def self_certainty(sample_paths, method_cfg, tokenizer, config):
         method_records.append((answer_text, sc_score, final_answer))
     
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in self_certainty")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
     
     if config.aggregate:
-        return borda_count(method_records, borda_p)
+        result = borda_count(method_records, borda_p)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info
     

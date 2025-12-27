@@ -1,8 +1,12 @@
+from collections import defaultdict
 import json
+import math
+from pathlib import Path
 import random
 import re
 import os
 from typing import List, Optional, Tuple
+from statistics import mean, pstdev
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import numpy as np
@@ -84,11 +88,11 @@ def load_model_and_tokenizer(model_name, read_model_from_huggingface=True):
     try:
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            device_map='auto',
+            device_map="auto",
             local_files_only=read_model_from_huggingface,
             trust_remote_code=True,
             torch_dtype=dtype,
-            # attn_implementation="flash_attention_2"
+            # attn_implementation="eager"
         )
         model = model.eval()
 
@@ -404,44 +408,97 @@ def extract_all_numerical_values_and_spans(text):
 
 
 def aggregate_paths_based_on_scores(paths):
+    if not paths:
+        return None, 0.0, None
+
     answer_scores = {}
-    answer_text = None
-    for answer, delta, final_answer in paths:
-        answer_scores[final_answer] = answer_scores.get(final_answer, 0) + delta
+    for _, delta, final_answer in paths:
+        answer_scores[final_answer] = answer_scores.get(final_answer, 0.0) + float(delta)
 
-    best_answer = max(answer_scores, key=answer_scores.get)
+    best_final_answer = max(answer_scores, key=answer_scores.get)
 
-    for answer, delta, final_answer in paths:
-        if final_answer == best_answer:
-            answer_text = answer
-            break
+    candidates = [
+        (answer_text, delta, final_answer)
+        for (answer_text, delta, final_answer) in paths
+        if final_answer == best_final_answer
+    ]
+    if not candidates:
+        raise RuntimeError("Best final answer not found in paths")
+    
+    best_answer_text, best_delta, _ = max(candidates, key=lambda t: t[1])
 
-    return answer_text, answer_scores[best_answer], best_answer
+    return best_answer_text, best_delta, best_final_answer
+
+
+def _winsorize(values, lower_q=0.05, upper_q=0.95):
+    if not values:
+        return []
+    xs = sorted(values)
+    n = len(xs)
+    lo = xs[int((n - 1) * lower_q)]
+    hi = xs[int((n - 1) * upper_q)]
+    return [min(max(x, lo), hi) for x in values]
+
+
+def _mean_std(values):
+    if not values:
+        return 0.0, 0.0
+    if len(values) == 1:
+        return float(values[0]), 0.0
+    return float(mean(values)), float(pstdev(values))
+
+
+def aggregate_paths_lcb_robust_vote(paths):
+    grouped_scores = defaultdict(list)
+    grouped_paths = defaultdict(list)
+    for answer_text, score, final_answer in paths:
+        grouped_scores[final_answer].append(float(score))
+        grouped_paths[final_answer].append((answer_text, float(score), final_answer))
+    
+    answer_scores = {}
+    for final_answer, scores in grouped_scores.items():
+        winsorized_scores = _winsorize(scores, lower_q=0.05, upper_q=0.95)
+        mean_score, std_score = _mean_std(winsorized_scores)
+        n = len(winsorized_scores)
+        lcb_score = mean_score - 1.96 * (std_score / math.sqrt(n + 1e-6))
+        answer_scores[final_answer] = lcb_score * math.log(n + 1)
+
+    best_final = max(answer_scores, key=answer_scores.get)
+    best_answer_text = max(grouped_paths[best_final], key=lambda x: x[1])[0]
+
+    return best_answer_text, answer_scores[best_final], best_final
+
+
+def aggregate_paths_based_on_scores_using_min(paths):
+
+    if not paths:
+        return None, 0.0, None
+    
+    y_max = max(y for _, y, _ in paths)
+    normalized_paths = [(x, y_max - y, z) for x, y, z in paths]  # Larger is better
+
+    answer_scores = {}
+    for _, delta, final_answer in normalized_paths:
+        answer_scores[final_answer] = answer_scores.get(final_answer, 0.0) + float(delta)
+
+    best_final_answer = max(answer_scores, key=answer_scores.get)
+
+    candidates = [
+        (answer_text, y, final_answer)
+        for (answer_text, y, final_answer) in paths
+        if final_answer == best_final_answer
+    ]
+    if not candidates:
+        raise RuntimeError("Best final answer not found in original paths")
+    
+    best_answer_text, best_y, _ = min(candidates, key=lambda t: t[1])
+
+    return best_answer_text, best_y, best_final_answer
 
 
 def construct_p_true_prompt(question, answer):
     base_prompt = f"Please answer either with 'True' or 'False' only. Is it True that: {question} {answer}"
     return base_prompt
-
-
-def aggregate_paths_based_on_scores_using_min(paths):
-    
-    y_max = max(y for _, y, _ in paths)
-    normalized_paths = [(x, y_max - y, z) for x, y, z in paths]
-
-    answer_scores = {}
-    answer_text = None
-    for answer, delta, final_answer in normalized_paths:
-        answer_scores[final_answer] = answer_scores.get(final_answer, 0) + delta
-
-    best_answer = max(answer_scores, key=answer_scores.get)
-
-    for answer, delta, final_answer in normalized_paths:
-        if final_answer == best_answer:
-            answer_text = answer
-            break
-
-    return answer_text, answer_scores[best_answer], best_answer
 
 
 def save_results_to_csv(results, filename):
@@ -459,6 +516,40 @@ def print_final_accuracy_table(method_final_acc):
     print("\n=== Final Accuracies ===")
     for method_name, acc in method_final_acc.items():
         print(f"{method_name}: {acc:.2f}%")
+
+
+def _json_safe(obj):
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+    if isinstance(obj, Path):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {str(k): _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_json_safe(x) for x in obj]
+    if "torch" in str(type(obj)):
+        if isinstance(obj, torch.Tensor):
+            return obj.detach().cpu().tolist()
+        try:
+            return obj.item()
+        except Exception:
+            return str(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, Path):
+        return str(obj)
+
+    return str(obj)
+
+
+def save_results_to_json(payload, file_path: str) -> Path:
+    if not os.path.exists(os.path.dirname(file_path)):
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(_json_safe(payload), f, ensure_ascii=False, indent=2)
+
+    return file_path
 
 
 if __name__ == "__main__":

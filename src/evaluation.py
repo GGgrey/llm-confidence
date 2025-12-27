@@ -7,13 +7,13 @@ import torch
 
 from src.config import method_groups
 from src.utils.utils import (
-    load_model_and_tokenizer, load_and_sample_parquet_datasets, load_lingua_model,
+    load_model_and_tokenizer, load_and_sample_parquet_datasets, load_lingua_model, save_jsonl, save_results_to_json,
     setup_tokenizer_padding_config, batch_messages_creation, save_results_to_csv,
     print_final_accuracy_table, extract_answer, load_datasets,
     seed_everything, get_available_gpus
 )
 from src.utils.grader import math_equal, check_is_correct
-from src.utils.parser import extract_answer_pro
+from src.utils.parser import extract_answer_pro, extract_answer
 from src.methods.oracle import oracle_self_consistency
 from src.methods.cer import cer
 from src.methods.self_consistency import self_consistency
@@ -39,6 +39,17 @@ from src.methods.semantic_consistency import semantic_consistency
 from src.methods.distinct_entropy import distinct_entropy
 from src.methods.permutation_entropy import permutation_entropy
 from src.methods.self_certainty import self_certainty
+from src.methods.energy import energy
+from src.methods.logit import logit_scoring
+from src.methods.logtoku import logtoku
+from src.methods.deepconf import deepconf
+from src.methods.stable_rank import stable_rank
+from src.methods.attention_entropy import attention_entropy
+from src.methods.generalized_entropy import generalized_entropy
+from src.methods.trajectory_pattern import trajectory_pattern
+from src.methods.anisotropy_evolution import anisotropy_evolution
+from src.methods.hidden_complexity import hidden_complexity
+from src.methods.rank_weighted_confidence import rank_weighted_confidence
 
 
 def dispatch_method(
@@ -133,6 +144,39 @@ def dispatch_method(
     
     elif method_name == "self_certainty":
         return self_certainty(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name.startswith("energy_"):
+        return energy(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name.startswith("logit_"):
+        return logit_scoring(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name == "logtoku":
+        return logtoku(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name.startswith("deepconf_"):
+        return deepconf(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name == "stable_rank":
+        return stable_rank(sample_paths, model, tokenizer, config)
+    
+    elif method_name == "attention_entropy":
+        return attention_entropy(sample_paths, method_cfg, model, tokenizer, config)
+    
+    elif method_name == "generalized_entropy":
+        return generalized_entropy(sample_paths, method_cfg, tokenizer, config)
+    
+    elif method_name == "trajectory_pattern":
+        return trajectory_pattern(sample_paths, model, tokenizer, config)
+    
+    elif method_name == "anisotropy_evolution":
+        return anisotropy_evolution(sample_paths, model, tokenizer, config)
+    
+    elif method_name == "hidden_complexity":
+        return hidden_complexity(sample_paths, model, tokenizer, config)
+    
+    elif method_name == "rank_weighted_confidence":
+        return rank_weighted_confidence(sample_paths, model, tokenizer, config)
 
     else:
         raise ValueError(f"Unsupported method: {method_name}")
@@ -153,6 +197,7 @@ def handle_sampling_group(
     batch_size = len(batch_questions)
     paths = [[] for _ in range(batch_size)]  # List for saving batch results
     group_results = []
+    group_records = []
 
     for _ in range(config.k):
 
@@ -175,17 +220,19 @@ def handle_sampling_group(
             eos_token_id=tokenizer.eos_token_id,
             use_cache=True,
             output_scores=True,
+            output_logits=True,
             return_dict_in_generate=True,
         )
 
         for i in range(batch_size):
-            generated_ids = batch_output.sequences[i]
+            generated_ids = batch_output.sequences[i].detach().cpu()
             prompt_len = tokenized_batch["input_ids"][i].shape[0]
-            answer_ids = generated_ids[prompt_len:]
+            answer_ids = generated_ids[prompt_len:].detach().cpu()
             answer_text = tokenizer.decode(answer_ids, skip_special_tokens=True)
-            output_scores = torch.stack([x[i] for x in batch_output.scores])
+            output_scores = torch.stack([x[i] for x in batch_output.scores]).detach().cpu()
+            output_logits = torch.stack([x[i] for x in batch_output.logits]).detach().cpu()
 
-            final_answer = extract_answer_pro(answer_text)
+            final_answer = extract_answer(answer_text)
 
             paths[i].append({
                 "prompt": batch_questions[i],
@@ -196,12 +243,15 @@ def handle_sampling_group(
                 "answer_ids": answer_ids,
                 "answer_text": answer_text,
                 "output_scores": output_scores,
+                "output_logits": output_logits,
                 "confidence": 1.0
             })
+        
+        del batch_output
 
     # Retain valid path with final answer
     for batch_idx in range(batch_size):
-        paths[batch_idx] = [p for p in paths[batch_idx] if p["final_answer"] is not None]
+        paths[batch_idx] = [p for p in paths[batch_idx] if p["final_answer"]]
 
     # For debug
     if config.verbose:
@@ -212,6 +262,7 @@ def handle_sampling_group(
     for method_name, method_cfg in group_cfgs.items():
         print(f"Current method: {method_name}, method config: {method_cfg}")
         method_result = []
+        record = []
 
         for i, sample_paths in enumerate(paths):
             if not sample_paths:
@@ -230,13 +281,43 @@ def handle_sampling_group(
             method_result.append(
                 (method_output[0], method_output[1], method_output[2])
             )
+
+            record.append(method_output[3])
         
         group_results.append({
             "method": method_name,
             "results": method_result
         })
+
+        group_records.append({
+            "method": method_name,
+            "records": record
+        })
+
+    batch_info = []
+    for i in range(batch_size):
+        batch_info.append({
+            "question": batch_questions[i],
+            "ground_truth": batch_correct_answers[i],
+            "k": config.k,
+            "samples": [
+                {
+                    "sample_idx": j,
+                    "answer_text": p.get("answer_text", ""),
+                    "final_answer": p.get("final_answer", None),
+                }
+                for j, p in enumerate(paths[i])
+            ],
+            "records": [
+                {
+                    "method": gr["method"],
+                    "record": gr["records"][i] if i < len(gr["records"]) else None
+                }
+                for gr in group_records
+            ]
+        })
     
-    return group_results
+    return group_results, batch_info
 
 
 def handle_greedy_group(
@@ -273,18 +354,20 @@ def handle_greedy_group(
         eos_token_id=tokenizer.eos_token_id,
         use_cache=True,
         output_scores=True,
+        # output_logits=True,
         return_dict_in_generate=True,
     )
 
     # Extract batch final answers
     for i in range(batch_size):
-        generated_ids = batch_output.sequences[i]
+        generated_ids = batch_output.sequences[i].detach().cpu()
         prompt_len = tokenized_batch["input_ids"][i].shape[0]
-        answer_ids = generated_ids[prompt_len:]
+        answer_ids = generated_ids[prompt_len:].detach().cpu()
         answer_text = tokenizer.decode(answer_ids, skip_special_tokens=True)
-        output_scores = torch.stack([x[i] for x in batch_output.scores])
+        output_scores = torch.stack([x[i] for x in batch_output.scores]).detach().cpu()
+        # output_logits = torch.stack([x[i] for x in batch_output.logits])
 
-        final_answer = extract_answer_pro(answer_text)
+        final_answer = extract_answer(answer_text)
 
         paths[i].append({
             "prompt": batch_questions[i],
@@ -294,8 +377,11 @@ def handle_greedy_group(
             "answer_ids": answer_ids,
             "answer_text": answer_text,
             "output_scores": output_scores,
+            # "output_logits": output_logits,
             "confidence": 1.0
         })
+
+    del batch_output
 
     for method_name, method_cfg in group_cfgs.items():
         print(f"Current method: {method_name}, method config: {method_cfg}")
@@ -331,6 +417,7 @@ def evaluate_batch_examples(
     config
 ):
     all_results = []
+    all_batch_info = []
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -358,12 +445,13 @@ def evaluate_batch_examples(
                 config, group_cfgs, device
             )
         elif group_name == "sampling":
-            group_results = handle_sampling_group(
+            group_results, batch_info = handle_sampling_group(
                 model, tokenizer, lingua_model,
                 batch_questions, batch_correct_answers,
                 tokenized_batch,
                 config, group_cfgs, device
             )
+            all_batch_info.extend(batch_info)
         
         all_results.append(group_results)
 
@@ -411,7 +499,7 @@ def evaluate_batch_examples(
         
             all_method_results.append(method_evaluation_result)
     
-    return all_method_results
+    return all_method_results, all_batch_info
 
 
 def evaluate_dataset(
@@ -427,8 +515,12 @@ def evaluate_dataset(
     answers = dataset["answer"].astype(str).tolist()
     
     total_questions = len(questions)
-    description=f"{dataset_name}_{config.model_name.replace('/', '_')}"
+    # total_questions = 1
+
+    model_tag = str(config.model_name).rstrip("/").split("/")[-1]
+    description=f"{dataset_name}_{model_tag}"
     correct_answers, method_names, all_results = {}, [], {}
+    all_batch_info = []
 
     # Process the dataset in batches
     with tqdm(total=total_questions, desc=f"Processing {description}", dynamic_ncols=True) as pbar:
@@ -440,7 +532,7 @@ def evaluate_dataset(
             batch_correct_answers = answers[start_idx:end_idx]
 
             # Evaluate the batch
-            batch_results = evaluate_batch_examples(
+            batch_results, batch_info = evaluate_batch_examples(
                 model,
                 tokenizer,
                 lingua_model,
@@ -448,6 +540,8 @@ def evaluate_dataset(
                 batch_correct_answers,
                 config
             )
+
+            all_batch_info.extend(batch_info)
 
             if config.verbose:  # For debug
                 print(f"\nBatch results: {batch_results}")
@@ -476,30 +570,69 @@ def evaluate_dataset(
             pbar.set_postfix(postfix_dict)
             pbar.update(end_idx - start_idx)
 
-    directory_path = Path("outputs")
-    directory_path.mkdir(parents=True, exist_ok=True)
-    save_results_to_csv(
-        all_results,
-        f"{directory_path}/{description}_evaluation_results_zero_shot.csv"
-    )
-
     method_final_accuracy = {
         m: (correct_answers[m] / total_questions) * 100
         for m in method_names
     }
 
     print_final_accuracy_table(method_final_accuracy)
-    
+
+    payload = {
+        "meta": {
+            "dataset_name": dataset_name,
+            "description": description,
+            "model_name": config.model_name,
+            "lingua_model_name": getattr(config, "lingua_model_name", None),
+            "seed": config.seed,
+            "k": config.k,
+            "batch_size": config.batch_size,
+            "max_new_tokens": config.max_new_tokens,
+            "num_beams": config.num_beams,
+            "temperature": config.temperature,
+            "top_p": config.top_p,
+            "repetition_penalty": config.repetition_penalty,
+            "length_penalty": config.length_penalty,
+            "no_repeat_ngram_size": config.no_repeat_ngram_size,
+            "early_stopping": config.early_stopping,
+            "use_base_prompt": getattr(config, "use_base_prompt", None),
+            "aggregate": config.aggregate,
+            "total_questions": total_questions,
+        },
+        "summary": {
+            "method_final_accuracy": method_final_accuracy,
+            "correct_counts": correct_answers,
+        },
+        "results": all_results,
+    }
+
+    directory_path = Path("outputs")
+    directory_path.mkdir(parents=True, exist_ok=True)
+    save_path = os.path.join(
+        directory_path,
+        f"{description}_k{config.k}_seed{config.seed}_t{config.temperature}_tp{config.top_p}_evaluation_results.jsonl"
+    )
+    save_results_to_json(payload, save_path)
+
+    samples_payload = {
+        "meta": payload["meta"],
+        "samples": all_batch_info,
+    }
+    samples_save_path = os.path.join(
+        directory_path,
+        f"{description}_k{config.k}_seed{config.seed}_t{config.temperature}_tp{config.top_p}_all_samples.json"
+    )
+    save_results_to_json(samples_payload, samples_save_path)
+
 
 def run(config):
 
     print("=" * 50)
     print("Configurations:")
-    print(f"Reasoning Model name: {config.model_name}")
+    print(f"Reasoning model name: {config.model_name}")
     print(f"Lingua model name: {config.lingua_model_name}")
     print(f"Aggregate: {config.aggregate}")
     print(f"K: {config.k}")
-    print(f"Number of samples: {config.number_samples}")
+    # print(f"Number of samples: {config.number_samples}")
     print(f"Seed: {config.seed}")
     print(f"Data directory: {config.data_dir}")
     print(f"Batch size: {config.batch_size}")

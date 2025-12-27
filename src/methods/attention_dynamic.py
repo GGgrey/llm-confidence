@@ -8,6 +8,9 @@ def get_attn_weights(generated_ids, model):
 
     attn_weights = None
 
+    if generated_ids.device != model.device:
+        generated_ids = generated_ids.to(model.device)
+
     with torch.no_grad():
         outputs = model(
             generated_ids.unsqueeze(0),
@@ -15,8 +18,10 @@ def get_attn_weights(generated_ids, model):
             return_dict=True
         )
 
-        if hasattr(outputs, 'attentions') and outputs.attentions is not None:
+        if hasattr(outputs, "attentions") and outputs.attentions is not None:
             attn_weights = outputs.attentions  # tuple: (num_layers, batch, num_heads, seq, seq)
+
+        del outputs
     
     if attn_weights is None:
         return None
@@ -48,6 +53,8 @@ def attention_dynamic(sample_paths, method_cfg, model, tokenizer, config):
 
         # Get attention weights
         attn_weights = get_attn_weights(generated_ids, model)
+        if attn_weights is None:
+             raise RuntimeError("Get attention weights failed")
         num_layers = len(attn_weights)
         num_heads = attn_weights[0].shape[1]
 
@@ -73,6 +80,8 @@ def attention_dynamic(sample_paths, method_cfg, model, tokenizer, config):
                     backward_distances.append(weighted_dist)
                     
                 d_matrix[layer_idx, head_idx] = np.mean(backward_distances)
+
+        del attn_weights
 
         # Local and global attention map
         flattened_d = d_matrix.flatten()
@@ -151,10 +160,18 @@ def attention_dynamic(sample_paths, method_cfg, model, tokenizer, config):
         method_records.append((answer_text, final_confidence, final_answer))
 
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in attention_dynamic")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
     
     if config.aggregate:
-        return aggregate_paths_based_on_scores(method_records)
+        result = aggregate_paths_based_on_scores(method_records)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info
 

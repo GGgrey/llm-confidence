@@ -692,11 +692,11 @@ def parse_ground_truth(example: Dict[str, Any], data_name):
     if "gt_cot" in example and "gt" in example:
 
         if data_name in ["math"]:
-            gt_ans = extract_answer(example["gt_cot"], data_name)
+            gt_ans = extract_answer_pro(example["gt_cot"], data_name)
         elif data_name == "omni-math":
             if "boxed" not in example["gt_cot"]:
                 example["gt_cot"] = "\\boxed" + "{" + example['gt_cot'] + "}"
-            gt_ans = extract_answer(example["gt_cot"], data_name)
+            gt_ans = extract_answer_pro(example["gt_cot"], data_name)
         elif data_name in STRIP_EXCEPTIONS:
             gt_ans = example["gt"]
         else:
@@ -706,7 +706,7 @@ def parse_ground_truth(example: Dict[str, Any], data_name):
     # parse ground truth
     if data_name in ["math", "minerva_math", "omni-math", 'aime', 'math500', 'aime2024', 'aime2025']:
         gt_cot = example["solution"]
-        gt_ans = extract_answer(gt_cot, data_name)
+        gt_ans = extract_answer_pro(gt_cot, data_name)
     elif "gsm8k" in data_name:
         gt_cot, gt_ans = example["answer"].split("####")
     elif data_name == "svamp":
@@ -855,6 +855,20 @@ def run_execute(executor, result, prompt_type, data_name, execute=False):
 
 def _test_extract_answer():
     pass
+
+
+def remove_boxed(s):
+    if "\\boxed " in s:
+        left = "\\boxed "
+        assert s[: len(left)] == left
+        return s[len(left) :]
+
+    left = "\\boxed{"
+
+    if s[: len(left)] == left and s[-1] == "}":
+        return s[len(left) : -1]
+    else:
+        return ""
 
 
 def _last_boxed_only_string(string):

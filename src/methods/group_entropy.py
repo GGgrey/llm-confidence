@@ -7,8 +7,9 @@ from src.utils.utils import aggregate_paths_based_on_scores_using_min
 def group_entropy(sample_paths, method_cfg, tokenizer, config):
     
     method_records = []
-    entropy_list = []
     k = method_cfg["k"]
+
+    all_entropy = []
 
     for path in sample_paths:
         answer_ids = path["answer_ids"]
@@ -21,12 +22,15 @@ def group_entropy(sample_paths, method_cfg, tokenizer, config):
             mask = answer_ids != tokenizer.pad_token_id
             entropy = entropy[mask]
 
-        total_entropy = entropy.sum()
-        normalized_entropy = (total_entropy / len(entropy)).item()
-        entropy_list.append(normalized_entropy)
+        if entropy.numel() > 0:
+            all_entropy.append(entropy)
 
-    mean_entropy = float(torch.tensor(entropy_list).mean())
-    std_entropy = float(torch.tensor(entropy_list).std(unbiased=True))
+    if len(all_entropy) == 0:
+        raise RuntimeError("No valid tokens to compute entropy")
+
+    all_entropy = torch.cat(all_entropy, dim=0)
+    mean_entropy = all_entropy.mean()
+    std_entropy = all_entropy.std(unbiased=True) if all_entropy.numel() > 1 else torch.tensor(0.0, device=all_entropy.device)
     high_entropy_threshold = mean_entropy + k * std_entropy
 
     for path in sample_paths:
@@ -53,11 +57,19 @@ def group_entropy(sample_paths, method_cfg, tokenizer, config):
         method_records.append((answer_text, confidence, final_answer))
 
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in group_entropy")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
     
     if config.aggregate:
-        return aggregate_paths_based_on_scores_using_min(method_records)
+        result = aggregate_paths_based_on_scores_using_min(method_records)
     else:
-        return (min(method_records, key=lambda x: x[1]))
+        result = min(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info
 
     

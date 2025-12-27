@@ -14,13 +14,14 @@ from math import isclose
 from typing import Union
 from collections import defaultdict
 
+import sympy
 from sympy import simplify, N
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.parsing.latex import parse_latex
 from latex2sympy2 import latex2sympy
 
 from src.utils.parser import strip_string, match_answer, _sympy_parse
-from src.utils.math_normalization import normalize_answer, _normalize
+from src.utils.math_normalization import normalize_answer, _normalize, _strip_properly_formatted_commas, _str_is_int, _str_to_int
 
 import signal
 from concurrent.futures import ThreadPoolExecutor
@@ -432,6 +433,17 @@ def check_is_correct(pred, gt, timeout=True):
     return math_equal(strip_string(pred), strip_string(gt), timeout=timeout)
 
 
+def check_is_correct_robust(pred, gt, timeout=True):
+    is_correct = math_equal(strip_string(pred), strip_string(gt), timeout=timeout)
+    if not is_correct and "√" in pred:
+        fixed_pred = re.sub(r'√\s*([0-9]+|[a-zA-Z])', r'\\sqrt{\1}', pred)
+        fixed_pred = re.sub(r'√\s*\((.*?)\)', r'\\sqrt{\1}', fixed_pred)
+        fixed_pred = fixed_pred.replace("√", "\\sqrt")
+        is_correct = math_equal(strip_string(fixed_pred), strip_string(gt), timeout=timeout)
+    
+    return is_correct
+
+
 def math_equal_simple(pred, gt):
     pred = strip_string(pred)
     gt = strip_string(gt)
@@ -501,34 +513,8 @@ def split_tuple(expr: str):
     return elems
 
 
-def _strip_properly_formatted_commas(expr: str):
-    # We want to be careful because we don't want to strip tuple commas
-    p1 = re.compile("(\d)(,)(\d\d\d)($|\D)")
-    while True:
-        next_expr = p1.sub("\\1\\3\\4", expr)
-        if next_expr == expr:
-            break
-        expr = next_expr
-    return next_expr
-
-
 def _is_frac(expr: str) -> bool:
     return bool(re.search(r"^-?[0-9]+.?/0*[1-9][0-9]*.?$", expr))
-
-
-def _str_is_int(x: str) -> bool:
-    try:
-        x = _strip_properly_formatted_commas(x)
-        x = float(x)
-        return abs(x - int(round(x))) <= 1e-7
-    except:
-        return False
-
-
-def _str_to_int(x: str) -> bool:
-    x = x.replace(",", "")
-    x = float(x)
-    return int(x)
 
 
 def count_unknown_letters_in_expr(expr: str):

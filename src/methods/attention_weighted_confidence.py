@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import torch
 
-from src.utils.utils import aggregate_paths_based_on_scores, extract_last_numerical_value
+from src.utils.utils import aggregate_paths_based_on_scores_using_min, extract_last_numerical_value
 
 
 def plot_token_importance(token_importance, tokens, tokenizer):
@@ -36,6 +36,9 @@ def get_attn_weights(generated_ids, model):
 
     attn_weights = None
 
+    if generated_ids.device != model.device:
+        generated_ids = generated_ids.to(model.device)
+
     with torch.no_grad():
         outputs = model(
             generated_ids.unsqueeze(0),
@@ -43,8 +46,10 @@ def get_attn_weights(generated_ids, model):
             return_dict=True
         )
 
-        if hasattr(outputs, 'attentions') and outputs.attentions is not None:
+        if hasattr(outputs, "attentions") and outputs.attentions is not None:
             attn_weights = outputs.attentions  # tuple: (num_layers, batch, num_heads, seq, seq)
+
+        del outputs
     
     if attn_weights is None:
         return None
@@ -125,6 +130,8 @@ def attention_weighted_confidence(sample_paths, tokenizer, model, config):
                 for token_idx in range(len(token_importance)):
                     token_importance[token_idx] += final_answer_attn[:, token_idx].sum().item()
 
+        del attn_weights
+
         token_importance /= (num_layers * num_heads)
 
         token_importance = np.log1p(token_importance)
@@ -150,12 +157,20 @@ def attention_weighted_confidence(sample_paths, tokenizer, model, config):
         method_records.append((answer_text, confidence, final_answer))
     
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in attention_weighted_confidence")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
 
     if config.aggregate:
-        return aggregate_paths_based_on_scores(method_records)
+        result = aggregate_paths_based_on_scores_using_min(method_records)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info
 
 
 

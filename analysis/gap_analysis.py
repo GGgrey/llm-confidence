@@ -32,7 +32,7 @@ def clean_and_parse(cell_value):
         return None
 
 
-file_path = './outputs/math_500__models_meta-llama_Llama-3.1-8B-Instruct_evaluation_results_zero_shot.csv'
+file_path = './outputs/math_500__models_meta-llama_Llama-3.1-8B-Instruct_evaluation_results_zero_shot-copy.csv'
 
 df = pd.read_csv(file_path)
 

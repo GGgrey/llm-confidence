@@ -58,6 +58,9 @@ def get_attn_weights(generated_ids, model):
 
     attn_weights = None
 
+    if generated_ids.device != model.device:
+        generated_ids = generated_ids.to(model.device)
+
     with torch.no_grad():
         outputs = model(
             generated_ids.unsqueeze(0),
@@ -65,8 +68,10 @@ def get_attn_weights(generated_ids, model):
             return_dict=True
         )
 
-        if hasattr(outputs, 'attentions') and outputs.attentions is not None:
+        if hasattr(outputs, "attentions") and outputs.attentions is not None:
             attn_weights = outputs.attentions  # tuple: (num_layers, batch, num_heads, seq, seq)
+
+        del outputs
     
     if attn_weights is None:
         return None

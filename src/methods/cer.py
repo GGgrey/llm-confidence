@@ -126,6 +126,9 @@ def handle_last_decoding(
         print("Final answer index is out of range")
         return confidence
     
+    decoded_answer = tokenizer.decode(answer_ids[final_answer_token_start_idx: final_answer_token_end_idx])
+    print(f"Decoded answer: {decoded_answer}")
+    
     final_answer_scores = output_scores[
         final_answer_token_start_idx: final_answer_token_end_idx
     ]
@@ -219,9 +222,17 @@ def handle_all_decoding(
             confidence = (0.5 * confidence_list[-1] + 0.5 * np.sum(confidence_list[:-1]) / (valid_count - 1))
     
     elif scoring_mode == "weighted_2":  # (2^0*c1 + ... + 2^(n-1)*cn) / (2^n - 1)
-        weights = [2**i for i in range(valid_count)]
-        confidence = np.sum(np.array([w * c for w, c in zip(weights, confidence_list)], dtype=float))
-        confidence = confidence / (2**valid_count - 1)
+        try:
+            weights = [2**i for i in range(valid_count)]
+            confidence = np.sum(np.array([w * c for w, c in zip(weights, confidence_list)], dtype=float))
+            confidence = confidence / (2**valid_count - 1)
+        except OverflowError:
+            threshold = 100  # Avoid overflow in weights, keep only the last 100 elements
+            trimmed_confidence_list = confidence_list[-threshold:]
+            weights = [2**i for i in range(len(trimmed_confidence_list))]
+            total_weight = 2**len(trimmed_confidence_list) - 1
+            confidence = np.sum(np.array([w * c for w, c in zip(weights, trimmed_confidence_list)], dtype=float))
+            confidence = confidence / total_weight
 
     else:
         raise ValueError(f"Unsupported scoring mode: {scoring_mode}")
@@ -261,11 +272,19 @@ def cer(sample_paths, method_cfg, tokenizer, config):
         method_records.append((answer_text, confidence, final_answer))
 
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in cer")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
     
     if config.aggregate:
-        return aggregate_paths_based_on_scores(method_records)
+        result = aggregate_paths_based_on_scores(method_records)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info
 
 

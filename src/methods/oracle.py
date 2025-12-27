@@ -21,4 +21,9 @@ def oracle_self_consistency(sample_paths):
         oracle_confidence = 0.0
         oracle_text = ""
 
-    return oracle_text, oracle_confidence, oracle_answer
+    path_info = [
+        {"answer_text": path["answer_text"], "score": 0.0, "final_answer": path["final_answer"]}
+        for path in sample_paths
+    ]
+
+    return oracle_text, oracle_confidence, oracle_answer, path_info

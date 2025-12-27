@@ -52,6 +52,9 @@ def get_attn_weights(generated_ids, model):
 
     attn_weights = None
 
+    if generated_ids.device != model.device:
+        generated_ids = generated_ids.to(model.device)
+
     with torch.no_grad():
         outputs = model(
             generated_ids.unsqueeze(0),
@@ -59,8 +62,10 @@ def get_attn_weights(generated_ids, model):
             return_dict=True
         )
 
-        if hasattr(outputs, 'attentions') and outputs.attentions is not None:
+        if hasattr(outputs, "attentions") and outputs.attentions is not None:
             attn_weights = outputs.attentions  # tuple: (num_layers, batch, num_heads, seq, seq)
+
+        del outputs
     
     if attn_weights is None:
         return None
@@ -163,10 +168,18 @@ def key_confidence(sample_paths, method_cfg, model, tokenizer, config):
         method_records.append((answer_text, confidence, final_answer))
     
     if not method_records or len(method_records) != len(sample_paths):
-        raise RuntimeError("Decoding error")
+        raise RuntimeError("Error happened in key_confidence")
+    
+    path_info = [
+        {"answer_text": a, "score": s, "final_answer": f}
+        for (a, s, f) in method_records
+    ]
 
     if config.aggregate:
-        return aggregate_paths_based_on_scores(method_records)
+        result = aggregate_paths_based_on_scores(method_records)
     else:
-        return (max(method_records, key=lambda x: x[1]))
+        result = max(method_records, key=lambda x: x[1])
+    
+    answer_text, score, final_answer = result
+    return answer_text, score, final_answer, path_info
 

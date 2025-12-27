@@ -18,6 +18,15 @@ def self_consistency(sample_paths):
             answer_text = path["answer_text"]
             break
 
-    return answer_text, confidence, best_answer
+    path_info = [
+        {
+            "answer_text": path["answer_text"],
+            "score": voting_results[path["final_answer"]] / len(sample_paths),
+            "final_answer": path["final_answer"]
+        }
+        for path in sample_paths
+    ]
+
+    return answer_text, confidence, best_answer, path_info
 
 
