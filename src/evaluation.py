@@ -515,7 +515,7 @@ def evaluate_dataset(
     answers = dataset["answer"].astype(str).tolist()
     
     total_questions = len(questions)
-    # total_questions = 1
+    # total_questions = 3
 
     model_tag = str(config.model_name).rstrip("/").split("/")[-1]
     description=f"{dataset_name}_{model_tag}"

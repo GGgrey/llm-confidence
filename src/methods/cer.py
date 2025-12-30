@@ -4,6 +4,7 @@ import numpy as np
 import torch
 
 from src.utils.utils import aggregate_paths_based_on_scores, find_last_subsequence_token_spans, find_all_subsequence_token_spans
+from src.utils.parser import _last_boxed
 
 
 def calculate_confidence_for_all_answers(logits_spans, answer_ids, token_spans, confidence_method):
@@ -112,9 +113,14 @@ def handle_last_decoding(
         print("Invalid trace")
         return confidence
     
+    extracted_answer = _last_boxed(answer_text)
+    if not extracted_answer:
+        print("Can not extract answer")
+        return confidence
+    
     final_answer_token_start_idx, final_answer_token_end_idx = find_last_subsequence_token_spans(
         answer_text,
-        final_answer,
+        extracted_answer,
         tokenizer
     )
     

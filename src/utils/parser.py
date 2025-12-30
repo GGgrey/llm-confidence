@@ -901,6 +901,36 @@ def _last_boxed_only_string(string):
         return string[left_brace_idx + 1: right_brace_idx].strip()
 
 
+def _last_boxed(string):
+        idx = string.rfind("\\boxed")
+        if idx < 0:
+            idx = string.rfind("\\fbox")
+            if idx < 0:
+                return None
+
+        i = idx
+        left_brace_idx = None
+        right_brace_idx = None
+        num_left_braces_open = 0
+        while i < len(string):
+            if string[i] == "{":
+                num_left_braces_open += 1
+                if left_brace_idx is None:
+                    left_brace_idx = i
+            elif string[i] == "}":
+                num_left_braces_open -= 1
+                if num_left_braces_open == 0:
+                    right_brace_idx = i
+                    break
+
+            i += 1
+        
+        if left_brace_idx is None or right_brace_idx is None:
+            return None
+
+        return string[idx: right_brace_idx+1].strip()
+
+
 def match_answer(response):
     is_matched = False
     for ans_marker in ['answer:', "answer is", "answers are"]:
@@ -973,5 +1003,48 @@ def _sympy_parse(expr: str):
     )
 
 
+def find_last_subsequence_token_spans(full_text, sub_text, tokenizer):
+    if not sub_text:
+        return None, None
+    
+    final_answer_token_start_idx = None
+    final_answer_token_end_idx = None
+
+    full_text_tokenized = tokenizer(full_text, add_special_tokens=False, return_offsets_mapping=True)
+    offsets = full_text_tokenized['offset_mapping']
+
+    final_answer_start_idx = full_text.rfind(sub_text)
+    if final_answer_start_idx == -1:
+        return None, None
+    
+    for i, (s, e) in enumerate(offsets):
+        if s <= final_answer_start_idx < e:
+            final_answer_token_start_idx = i
+        if s < final_answer_start_idx + len(sub_text) <= e:
+            final_answer_token_end_idx = i + 1
+        if final_answer_token_start_idx is not None and final_answer_token_end_idx is not None:
+            break
+    
+    return final_answer_token_start_idx, final_answer_token_end_idx
+
+
 if __name__ == "__main__":
     _test_extract_answer()
+
+    str = "To solve the problem, we will follow these steps:\n\n1. **Understand the Centroid and Medians**:\n   - The centroid \\( G \\) of a triangle divides each median into a ratio of \\( 2:1 \\), with the longer segment being closer to the vertex.\n   - Therefore, \\( AG:GD = 2:1 \\), \\( BG:GE = 2:1 \\), and \\( CG:GF = 2:1 \\).\n\n2. **Line Parallel to BC Through G**:\n   - The line through \\( G \\) parallel to \\( BC \\) intersects \\( AB \\) at \\( M \\) and \\( AC \\) at \\( N \\).\n   - Since \\( MN \\parallel BC \\), triangles \\( AMN \\) and \\( ABC \\) are similar by AA similarity (both share angle \\( A \\) and corresponding angles are equal due to the parallel lines).\n\n3. **Similarity Ratio**:\n   - The centroid \\( G \\) divides \\( BC \\) into segments such that \\( BG:GC = 2:1 \\).\n   - Since \\( MN \\parallel BC \\), the line \\( MN \\) divides \\( AB \\) and \\( AC \\) in the same ratio \\( 2:1 \\).\n   - Therefore, \\( AM:MB = 2:1 \\) and \\( AN:NC = 2:1 \\).\n\n4. **Area Ratio of Similar Triangles**:\n   - The area ratio of two similar triangles is the square of the ratio of their corresponding sides.\n   - Since \\( AM:AB = AN:AC = \\frac{2}{3} \\), the area of \\( \\triangle AMN \\) to the area of \\( \\triangle ABC \\) is \\(\\left(\\frac{2}{3}\\right)^2 = \\frac{4}{9}\\).\n\n5. **Area of \\( \\triangle AMN \\)**:\n   - Given the area of \\( \\triangle ABC \\) is 144, the area of \\( \\triangle AMN \\) is:\n     \\[\n     \\text{Area of } \\triangle AMN = \\frac{4}{9} \\times 144 = 64\n     \\]\n\n6. **Area of \\( \\triangle ENG \\)**:\n   - \\( \\triangle ENG \\) is a part of \\( \\triangle AMN \\).\n   - \\( G \\) divides \\( EN \\) in the ratio \\( 2:1 \\) because \\( G \\) is the centroid.\n   - Therefore, \\( \\triangle ENG \\) is one-third of \\( \\triangle ENM \\).\n   - Since \\( \\triangle ENM \\) is a part of \\( \\triangle AMN \\) and \\( EN \\) is \\(\\frac{1}{3}\\) of \\( EM \\), the area of \\( \\triangle ENG \\) is:\n     \\[\n     \\text{Area of } \\triangle ENG = \\frac{1}{3} \\times \\text{Area of } \\triangle ENM = \\frac{1}{3} \\times \\frac{2}{3} \\times 64 = \\frac{2}{9} \\times 64 = \\frac{128}{9}\n     \\]\n\n7. **Simplify the Result**:\n   - The area of \\( \\triangle ENG \\) simplifies to:\n     \\[\n     \\frac{128}{9}\n     \\]\n\nTherefore, the area of \\( \\triangle ENG \\) is \\(\\boxed{\\frac{128}{9}}\\)."
+    output = _last_boxed(str)
+    print(output)
+
+    # output = extract_answer(str)
+    # print(output)
+
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        "/models/Qwen/Qwen2.5-7B-Instruct",
+        trust_remote_code=True
+    )
+    answer_ids = tokenizer.encode(str)
+
+    start_idx, end_idx = find_last_subsequence_token_spans(str, output, tokenizer)
+    print(tokenizer.decode(answer_ids[start_idx: end_idx]))

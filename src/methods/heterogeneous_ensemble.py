@@ -75,6 +75,18 @@ class QuantileLogitMetric(BaseMetric):
             return 0.0
         s_quant = torch.quantile(context["logits"], self.alpha).item()
         return s_quant
+    
+
+class QuantileEntropyMetric(BaseMetric):
+    def __init__(self, name: str, alpha: float):
+        super().__init__(name, lower_is_better=True)
+        self.alpha = alpha
+
+    def compute(self, context: Dict[str, Any]) -> float:
+        if context["entropy"].numel() == 0:
+            return 0.0
+        s_quant = torch.quantile(context["entropy"], self.alpha).item()
+        return s_quant
 
 
 class LengthMetric(BaseMetric):
@@ -174,13 +186,16 @@ def get_metrics_from_config(method_cfg: Dict) -> List[BaseMetric]:
     
     active_metrics = []
     for name in metric_names:
-        if name.startswith("quantile_logit_"):
+        if name.startswith("quantile_"):
             try:
                 suffix = name.split("_")[-1]
                 val = float(suffix)
                 alpha = val / 100.0
                 alpha = max(0.0, min(1.0, alpha))
-                active_metrics.append(QuantileLogitMetric(name=name, alpha=alpha))
+                if "logit" in name:
+                    active_metrics.append(QuantileLogitMetric(name=name, alpha=alpha))
+                elif "entropy" in name:
+                    active_metrics.append(QuantileEntropyMetric(name=name, alpha=alpha))
             except ValueError:
                 raise ValueError(f"Invalid quantile metric format: {name}")
         elif name in METRIC_REGISTRY:
