@@ -1,6 +1,8 @@
 import random
 import os
 from typing import Optional
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tqdm import tqdm
 import argparse
@@ -29,7 +31,7 @@ def get_available_gpus(exclude_list: str):
 def load_dataset(file_path):
     df = None
     if os.path.isfile(file_path):
-        df = pd.read_parquet(file_path)
+        df = pd.read_json(file_path, lines=True)
     return df
 
 
@@ -106,27 +108,79 @@ def compute_likelihood_confidence(output_scores, answer_ids):
     return avg_likelihood
 
 
-def trend_linear_regression(entropy):
-    x = np.arange(len(entropy)).reshape(-1, 1)
-    y = np.array(entropy)
-    model = LinearRegression()
-    model.fit(x, y)
-    slope = model.coef_[0]
-    intercept = model.intercept_
-    r2 = model.score(x, y)
-    trend = "upward" if slope > 0 else "downward"
-    return slope, intercept, r2, trend
+def compute_entropy_confidence(output_scores, answer_ids):
+    entropies = []
+    for token_idx, logits in enumerate(output_scores):
+        logits = logits.view(-1)
+        probs = torch.softmax(logits, dim=-1)
+        probs = torch.clamp(probs, min=1e-12)
+        ent = -torch.sum(probs * torch.log(probs)).item()
+        entropies.append(ent)
+    return float(np.mean(entropies)) if entropies else 0.0
 
 
-def compute_entropy_trend_confidence(output_scores, answer_ids, tokenizer):
-    logits = torch.stack(output_scores, dim=0)
-    probs = F.softmax(logits, dim=-1)
-    entropy = -(probs * torch.log(probs + 1e-12)).sum(dim=-1)
-    if tokenizer.pad_token_id is not None:
-        mask = answer_ids != tokenizer.pad_token_id
-        entropy = entropy[mask]
-    slope, _, _, _ = trend_linear_regression(entropy.detach().cpu().numpy())
-    return slope
+def compute_perplexity_confidence(output_scores, answer_ids):
+    nlls = []
+    for token_idx, logits in enumerate(output_scores):
+        logits = logits.view(-1)
+        token_id = answer_ids[token_idx].item()
+        log_probs = torch.log_softmax(logits, dim=-1)
+        nll = -log_probs[token_id].item()
+        nlls.append(nll)
+    if not nlls:
+        return 0.0
+    return float(np.exp(np.mean(nlls)))
+
+
+def compute_all_confidences(output_scores, answer_ids, tokenizer):
+    confidences = {}
+    confidences["mean_confidence"] = compute_average_trace_confidence(output_scores, k=20)
+    confidences["perplexity"] = compute_perplexity_confidence(output_scores, answer_ids)
+    confidences["logit"] = compute_logit_confidence(output_scores, answer_ids)
+    confidences["likelihood"] = compute_likelihood_confidence(output_scores, answer_ids)
+    confidences["entropy"] = compute_entropy_confidence(output_scores, answer_ids)
+    return confidences
+
+
+def plot_and_save(df, method_name):
+    df = df[df["is_valid"]]
+    correct_conf = df[df["is_correct"]]["confidence"]
+    incorrect_conf = df[~df["is_correct"]]["confidence"]
+
+    print(f"[{method_name}] Valid count: {len(df)}")
+    print(f"[{method_name}] Correct count: {len(correct_conf)}, Incorrect count: {len(incorrect_conf)}")
+    print(f"[{method_name}] Average accuracy: {df['is_correct'].mean():.2%}")
+
+    ks_stat, p_value = ks_2samp(correct_conf, incorrect_conf)
+    print(f"[{method_name}] KS statistic: {ks_stat:.4f}, p-value: {p_value:.4e}")
+
+    plt.figure(figsize=(8, 4))
+    bins = np.linspace(df["confidence"].min(), df["confidence"].max(), 80)
+
+    plt.hist(correct_conf, bins=bins, alpha=0.7, color="seagreen", label="Correct")
+    plt.hist(incorrect_conf, bins=bins, alpha=0.7, color="peru", label="Incorrect")
+
+    plt.axvline(correct_conf.mean(), color="darkgreen", ls="--", lw=1.5, label="Correct Mean")
+    plt.axvline(incorrect_conf.mean(), color="saddlebrown", ls="--", lw=1.5, label="Incorrect Mean")
+
+    plt.xlabel("Confidence", fontsize=13)
+    plt.ylabel("Frequency", fontsize=13)
+    title_str = (
+        f"Method: {method_name} | "
+        f"KS stat: {ks_stat:.4f}, p: {p_value:.2e}"
+    )
+    plt.title(title_str, fontsize=14)
+    plt.legend()
+    plt.tight_layout()
+
+    base_dir = os.path.join("outputs/confidence_distribution/", f"{method_name}")
+    os.makedirs(base_dir, exist_ok=True)
+    fig_save_path = os.path.join(base_dir, f"{method_name}_plot.png")
+    plt.savefig(fig_save_path, dpi=300)
+    plt.close()
+
+    csv_save_path = os.path.join(base_dir, "inference_results.csv")
+    df.to_csv(csv_save_path, index=False)
 
 
 def run_inference(
@@ -184,33 +238,48 @@ def run_inference(
         # Extract final answer string
         final_answer = extract_answer(answer_text)
 
-        # Calculate confidence
-        confidence = 0.0
-        if confidence_method == "mean_confidence":
-            confidence = compute_average_trace_confidence(output_scores, k=20)
-        elif confidence_method == "logit":
-            confidence = compute_logit_confidence(output_scores, answer_ids)
-        elif confidence_method == "likelihood":
-            confidence = compute_likelihood_confidence(output_scores, answer_ids)
-        elif confidence_method == "entropy_trend":
-            confidence = compute_entropy_trend_confidence(output_scores, answer_ids, tokenizer)
-        else:
-            raise ValueError("Confidence method is not supported")
-
         is_valid = final_answer is not None
         try:
             is_correct = check_is_correct(final_answer, ground_truth)
         except:
             is_correct = str(final_answer) == str(ground_truth)
 
-        outputs.append({
-            "text": answer_text,
-            "answer": final_answer,
-            "ground_truth": ground_truth,
-            "confidence": confidence,
-            "is_valid": is_valid,
-            "is_correct": is_correct
-        })
+        # Calculate confidence
+        if confidence_method == "all":
+            confidences = compute_all_confidences(output_scores, answer_ids, tokenizer)
+            row = {
+                "text": answer_text,
+                "answer": final_answer,
+                "ground_truth": ground_truth,
+                "is_valid": is_valid,
+                "is_correct": is_correct,
+            }
+            for k, v in confidences.items():
+                row[f"confidence_{k}"] = v
+            outputs.append(row)
+        else:
+            confidence = 0.0
+            if confidence_method == "mean_confidence":
+                confidence = compute_average_trace_confidence(output_scores, k=20)
+            elif confidence_method == "perplexity":
+                confidence = compute_perplexity_confidence(output_scores, answer_ids)
+            elif confidence_method == "logit":
+                confidence = compute_logit_confidence(output_scores, answer_ids)
+            elif confidence_method == "likelihood":
+                confidence = compute_likelihood_confidence(output_scores, answer_ids)
+            elif confidence_method == "entropy":
+                confidence = compute_entropy_confidence(output_scores, answer_ids)
+            else:
+                raise ValueError("Confidence method is not supported")
+
+            outputs.append({
+                "text": answer_text,
+                "answer": final_answer,
+                "ground_truth": ground_truth,
+                "confidence": confidence,
+                "is_valid": is_valid,
+                "is_correct": is_correct
+            })
 
         del output, input_ids
         torch.cuda.empty_cache()
@@ -228,17 +297,19 @@ def run(args):
     dataset = load_dataset(args.data_dir)
 
     questions = dataset["question"].tolist()
-    questions = questions[:500]
-    answers = dataset["numeric_final_answer"].astype(str).tolist()
-    answers = answers[:500]
+    questions = questions[:10]
+    answers = dataset["answer"].astype(str).tolist()
+    answers = answers[:10]
     completions = []
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     if args.confidence_method == "mean_confidence" or \
+        args.confidence_method == "perplexity" or \
         args.confidence_method == "logit" or \
         args.confidence_method == "likelihood" or \
-        args.confidence_method == "entropy_trend":
+        args.confidence_method == "entropy" or \
+        args.confidence_method == "all":
 
         mp.set_start_method("spawn")
         num_processes = args.num_processes
@@ -289,6 +360,22 @@ def run(args):
         raise ValueError("Completions are not valid")
 
     df = pd.DataFrame(completions)
+
+    if args.confidence_method == "all":
+        method_list = ["mean_confidence", "perplexity", "likelihood", "logit", "entropy"]
+        base_dir_all = os.path.join("outputs/confidence_distribution/", "all")
+        os.makedirs(base_dir_all, exist_ok=True)
+        df.to_csv(os.path.join(base_dir_all, "inference_results_all_methods.csv"), index=False)
+
+        for method_name in method_list:
+            conf_col = f"confidence_{method_name}"
+            if conf_col not in df.columns:
+                continue
+            df_method = df.copy()
+            df_method["confidence"] = df_method[conf_col]
+            plot_and_save(df_method[["text", "answer", "ground_truth", "confidence", "is_valid", "is_correct"]], method_name)
+        return
+
     df = df[df["is_valid"]]
     correct_conf = df[df["is_correct"]]["confidence"]
     incorrect_conf = df[~df["is_correct"]]["confidence"]
@@ -338,28 +425,29 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_dir", "-d", type=str, default="data/src_custom_datasets_math_dataset_test_processed.parquet")
-    parser.add_argument("--model", type=str, default="/models/meta-llama/Llama-3.1-8B-Instruct")
+    parser.add_argument("--data_dir", "-d", type=str, default="data/math_500.jsonl")
+    parser.add_argument("--model", type=str, default="/data/sunqiao/projects/models/Qwen/Qwen2.5-3B")
     parser.add_argument(
         "--confidence_method",
         type=str,
-        default="mean_confidence",
+        default="all",
         choices=[
             "mean_confidence",
             "perplexity",
             "likelihood",
             "logit",
-            "entropy_trend"
+            "entropy",
+            "all"
         ],
     )
     parser.add_argument("--num_samples", type=int, default=16)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--max_new_tokens", type=float, default=2048)
-    parser.add_argument("--num_processes", default=4, type=int)
+    parser.add_argument("--num_processes", default=16, type=int)
     parser.add_argument(
         "--exclude_gpus",
         type=str,
-        default="3",
+        default="",
         help="Comma-separated list of GPU ids to exclude, e.g. '2' or '1,3'."
     )
 
