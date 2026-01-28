@@ -535,9 +535,9 @@ sampling_configs.update({
         "method": "rrf",
         "sampling_mode": "temperature",
         "rank_mode": "rrf",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
-        "rrf_k": 40,
-        "power_p": 1.4,
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
+        "rrf_k": 60,
+        "power_p": 1.2,
         "weighting_mode": "std_inverse",
     },
 
@@ -545,9 +545,9 @@ sampling_configs.update({
         "method": "borda",
         "sampling_mode": "temperature",
         "rank_mode": "borda",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
-        "rrf_k": 40,
-        "power_p": 1.4,
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
+        "rrf_k": 60,
+        "power_p": 1.2,
         "weighting_mode": "std_inverse",
     },
 
@@ -555,7 +555,7 @@ sampling_configs.update({
         "method": "combsum",
         "sampling_mode": "temperature",
         "rank_mode": "combsum",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -565,7 +565,7 @@ sampling_configs.update({
     #     "method": "combmnz",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "combmnz",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.3,
     #     "weighting_mode": "std_inverse",
@@ -575,7 +575,7 @@ sampling_configs.update({
         "method": "expcombsum",
         "sampling_mode": "temperature",
         "rank_mode": "expcombsum",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -585,7 +585,7 @@ sampling_configs.update({
     #     "method": "expcombmnz",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "expcombmnz",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.3,
     #     "weighting_mode": "std_inverse",
@@ -595,7 +595,7 @@ sampling_configs.update({
     #     "method": "combsum_topn",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "combsum_topn",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.3,
     #     "weighting_mode": "std_inverse",
@@ -606,7 +606,7 @@ sampling_configs.update({
         "method": "combmax",
         "sampling_mode": "temperature",
         "rank_mode": "combmax",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -617,7 +617,7 @@ sampling_configs.update({
         "method": "combmin",
         "sampling_mode": "temperature",
         "rank_mode": "combmin",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -628,7 +628,7 @@ sampling_configs.update({
         "method": "combmed",
         "sampling_mode": "temperature",
         "rank_mode": "combmed",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -639,7 +639,7 @@ sampling_configs.update({
         "method": "combanz",
         "sampling_mode": "temperature",
         "rank_mode": "combanz",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -650,7 +650,7 @@ sampling_configs.update({
         "method": "sqcombsum",
         "sampling_mode": "temperature",
         "rank_mode": "sqcombsum",
-        "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+        "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
         "rrf_k": 5,
         "power_p": 0.3,
         "weighting_mode": "std_inverse",
@@ -661,7 +661,7 @@ sampling_configs.update({
     #     "method": "sqcombmnz",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "sqcombmnz",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.3,
     #     "weighting_mode": "std_inverse",
@@ -672,7 +672,7 @@ sampling_configs.update({
     #     "method": "rr_x",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "rr_x",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.7,
     #     "weighting_mode": "std_inverse",
@@ -683,7 +683,7 @@ sampling_configs.update({
     #     "method": "combsum_rr_x",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "combsum_rr_x",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.7,
     #     "weighting_mode": "std_inverse",
@@ -694,7 +694,7 @@ sampling_configs.update({
     #     "method": "sqcombsum_rr_x",
     #     "sampling_mode": "temperature",
     #     "rank_mode": "sqcombsum_rr_x",
-    #     "ensemble_metrics": ["mean_entropy", "quantile_entropy_5", "quantile_entropy_10", "quantile_entropy_15", "quantile_entropy_20", "quantile_entropy_25", "quantile_entropy_30", "quantile_entropy_35", "quantile_entropy_40", "quantile_entropy_45", "quantile_entropy_50", "quantile_entropy_55", "quantile_entropy_60", "quantile_entropy_65", "quantile_entropy_70", "quantile_entropy_75", "quantile_entropy_80", "quantile_entropy_85", "quantile_entropy_90", "quantile_entropy_95"],
+    #     "ensemble_metrics": ["mean_entropy", "mean_logprob", "mean_logit"],
     #     "rrf_k": 5,
     #     "power_p": 0.7,
     #     "weighting_mode": "std_inverse",
@@ -876,7 +876,7 @@ class Config:
     
     # Number of samples to process
     # number_samples: int = int(os.getenv("N_SAMPLE", 500))
-    seed: int = int(os.getenv("SEED", 1252))
+    seed: int = int(os.getenv("SEED", 1262))
 
     # Path to few-shots
     gsm8k_shots: str = "inputs/shots/gsm8k.txt"
@@ -903,4 +903,4 @@ class Config:
 
     use_base_prompt: bool = eval(os.getenv("BASE_PROMPT", 'True'))
 
-    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 6"
+    exclude_gpus: str = "0, 1, 2, 3, 4, 5, 7"

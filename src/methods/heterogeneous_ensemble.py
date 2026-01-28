@@ -437,7 +437,7 @@ def ensemble_combsum(
     for metric in active_metrics:
         raw_values = metrics_data[metric.name]
         # Perform min-max normalization
-        normalized_scores[metric.name] = Standardizer.min_max_scale(
+        normalized_scores[metric.name] = Standardizer.zscore_sigmoid(
             raw_values, 
             lower_is_better=metric.lower_is_better
         )
@@ -469,7 +469,7 @@ def ensemble_combmnz(
 
     for metric in active_metrics:
         raw_values = metrics_data[metric.name]
-        normalized_scores[metric.name] = Standardizer.min_max_scale(
+        normalized_scores[metric.name] = Standardizer.zscore_sigmoid(
             raw_values, 
             lower_is_better=metric.lower_is_better
         )
@@ -507,7 +507,7 @@ def ensemble_exp_sq(
 
     for metric in active_metrics:
         raw_values = metrics_data[metric.name]
-        normalized_scores[metric.name] = Standardizer.min_max_scale(
+        normalized_scores[metric.name] = Standardizer.zscore_sigmoid(
             raw_values, 
             lower_is_better=metric.lower_is_better
         )
@@ -556,7 +556,7 @@ def ensemble_combsum_topn(
 
     for metric in active_metrics:
         raw_values = metrics_data[metric.name]
-        normalized_scores[metric.name] = Standardizer.min_max_scale(
+        normalized_scores[metric.name] = Standardizer.zscore_sigmoid(
             raw_values, 
             lower_is_better=metric.lower_is_better
         )
@@ -606,7 +606,7 @@ def ensemble_stat(
 
     for metric in active_metrics:
         raw_values = metrics_data[metric.name]
-        normalized_scores[metric.name] = Standardizer.min_max_scale(
+        normalized_scores[metric.name] = Standardizer.zscore_sigmoid(
             raw_values, 
             lower_is_better=metric.lower_is_better
         )
@@ -648,7 +648,7 @@ def ensemble_combanz(
 
     for metric in active_metrics:
         raw_values = metrics_data[metric.name]
-        normalized_scores[metric.name] = Standardizer.min_max_scale(
+        normalized_scores[metric.name] = Standardizer.zscore_sigmoid(
             raw_values, 
             lower_is_better=metric.lower_is_better
         )
